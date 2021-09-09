@@ -6,7 +6,7 @@ shader::shader(vec3d light_src, float light_intensity, float ambient_intensity) 
 
 lamb_shader::lamb_shader(vec3d light_src, float light_intensity, float ambient_intensity) : shader(light_src, light_intensity, ambient_intensity){};
 
-QRgb lamb_shader::shade(hit_record hr){
+QRgb lamb_shader::shade(hit_record hr, bool in_shadow){
     QRgb scolor = hr.get_surface_color();
     int sred, sgreen, sblue; //single surface color RGB values
     sred = qRed(scolor);
@@ -25,14 +25,16 @@ QRgb lamb_shader::shade(hit_record hr){
     normal = normal / normal.norm();
 
     //compute and normalize light incidence vector
-    vec3d light_incidence = light_src - hr.get_sect_coords();
+    vec3d light_incidence = hr.get_sect_coords() - light_src                                                                                                                  ;
     light_incidence = light_incidence / light_incidence.norm();
 
-    //apply lambertiean shading
-    float dot = std::max((float) 0, normal * light_incidence);
-    ored += sred * light_intensity * dot;
-    oblue += sblue * light_intensity * dot;
-    ogreen += sgreen * light_intensity * dot;
+    //apply lambertiean shading if is not in shadow
+    if(!in_shadow){
+        float dot = std::max((float) 0, normal * light_incidence);
+        ored += sred * light_intensity * dot;
+        oblue += sblue * light_intensity * dot;
+        ogreen += sgreen * light_intensity * dot;
+    }
 
     //check bounds
     ored = std::min(255,ored);

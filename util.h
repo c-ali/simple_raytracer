@@ -12,7 +12,8 @@ public:
     vec3d(float x, float y, float z);
     vec3d(); //empty constructor makes 1 vector
     vec3d operator-();
-    float norm();
+    float norm(); //returns norm
+    vec3d normalized(); //returns normalized vector
 };
 
 vec3d operator-(vec3d first, vec3d second);
@@ -92,13 +93,13 @@ public:
 
 class mesh {
 private:
-    //std::vector<std::shared_ptr<surface>> vertices;
+   std::vector<std::shared_ptr<surface>> vertices;
 public:
-    std::vector<std::shared_ptr<surface>> vertices;
     int size();
     void add_surface(std::shared_ptr<surface> new_surface);
     mesh();
     std::shared_ptr<surface> operator[](size_t idx);
+    bool hit(ray r, float t0, float t1, hit_record &rec);
 };
 
 #endif // UTIL_H

@@ -24,7 +24,7 @@ private:
     const char MODE = 'p'; // p = perspectivic; o = orthographic
 public:
     QImage render();
-    view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst);
+    view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst, vec3d light_src);
 };
 
 #endif // VIEW_H

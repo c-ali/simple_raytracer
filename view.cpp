@@ -3,10 +3,10 @@
 #include "util.h"
 #include "shading.h"
 
-view::view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst) : img_width(width), img_height(height), viewer_pos(viewer_pos), msh(msh), viewing_dst(viewing_dst){}
+view::view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst, vec3d light_src) : img_width(width), img_height(height), viewer_pos(viewer_pos), msh(msh), viewing_dst(viewing_dst), light_src(light_src){}
 
 QImage view::render(){
-    lamb_shader s = lamb_shader(vec3d(3,8,-5));
+    lamb_shader s = lamb_shader(light_src);
     vec3d ray_direction, ray_origin;
     QImage img(img_width, img_height, QImage::Format_RGB16);
     //loop over pixels
@@ -30,15 +30,20 @@ QImage view::render(){
                 } break;
             }
 
-            //compute intersection with objects
+            //set default color
             img.setPixelColor(i, j, "white");
-            for(int k = 0; k < msh.size(); ++k){
-                ray r = ray(ray_origin, ray_direction);
-                hit_record hr = hit_record();
-                bool hit = msh.vertices.at(k)->hit(r, min_dist, max_dist, hr);
-                if(hit)
-                    img.setPixel(i,j,s.shade(hr));
-                    //img.setPixelColor(i, j, "black");
+
+            ray light_ray = ray(ray_origin, ray_direction);
+            hit_record hr = hit_record(); //view hit record
+            hit_record sr = hit_record(); //shadow record
+
+            //check if ray hits any objec
+            if(msh.hit(light_ray, min_dist, max_dist, hr)){
+                //check for shadow
+                vec3d sect_pt = hr.get_sect_coords();
+                ray shadow_ray = ray(sect_pt, light_src - sect_pt);
+                //img.setPixel(i,j,s.shade(hr, msh.hit(shadow_ray, 0.1, max_dist, sr)));
+                img.setPixel(i,j,s.shade(hr, false));
             }
         }
     }

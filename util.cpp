@@ -13,6 +13,11 @@ float vec3d::norm(){
     return std::sqrt(x*x + y*y + z*z);
 }
 
+vec3d vec3d::normalized(){
+    float n = norm();
+    return vec3d(x/n, y/n, z/n);
+}
+
 vec3d operator+(vec3d first, vec3d second){
     vec3d res(first.x+second.x, first.y+second.y, first.z+second.z);
     return res;
@@ -57,6 +62,14 @@ void hit_record::set_sect_coords(vec3d coords){sect_coords = coords;};
 vec3d hit_record::get_sect_coords(){return sect_coords;};
 void hit_record::set_surface_color(QRgb color){surface_color = color;};
 QRgb hit_record::get_surface_color(){return surface_color;};
+
+bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
+    for(int i = 0; i < vertices.size(); ++i){
+        if(vertices.at(i)->hit(r, t0, t1, rec))
+            return true;
+    }
+    return false;
+}
 
 sphere::sphere(vec3d center, float radius) : center(center), radius(radius){};
 
