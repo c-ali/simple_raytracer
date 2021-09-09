@@ -9,9 +9,10 @@ class shader{
 protected:
     vec3d light_src;
     float light_intensity;
+    float ambient_intensity;
 public:
     virtual QRgb shade(hit_record hr) = 0;
-    shader(vec3d light_src, float light_intensity);
+    shader(vec3d light_src, float light_intensity, float ambient_intensity);
 };
 
 class lamb_shader : public shader{
@@ -19,7 +20,7 @@ private:
     std::vector<vec3d> light_srcs;
 public:
     QRgb shade(hit_record hr) override;
-    lamb_shader(vec3d light_src, float light_intensity);
+    lamb_shader(vec3d light_src, float light_intensity = 1, float ambient_intensity = 0.2);
 };
 
 #endif // SHADING_H

@@ -6,7 +6,7 @@
 view::view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst) : img_width(width), img_height(height), viewer_pos(viewer_pos), msh(msh), viewing_dst(viewing_dst){}
 
 QImage view::render(){
-    lamb_shader s = lamb_shader(vec3d(3,-8,-5), 1);
+    lamb_shader s = lamb_shader(vec3d(3,8,-5));
     vec3d ray_direction, ray_origin;
     QImage img(img_width, img_height, QImage::Format_RGB16);
     //loop over pixels
