@@ -42,8 +42,11 @@ QImage view::render(){
                 //check for shadow
                 vec3d sect_pt = hr.get_sect_coords();
                 ray shadow_ray = ray(sect_pt, light_src - sect_pt);
-                //img.setPixel(i,j,s.shade(hr, msh.hit(shadow_ray, 0.1, max_dist, sr)));
-                img.setPixel(i,j,s.shade(hr, false));
+                bool shadows = msh.hit(shadow_ray, 0.5, max_dist, sr);
+                if(shadows)
+                    img.setPixel(i,j,s.shade(hr, shadows));
+                else
+                    img.setPixel(i,j,s.shade(hr, false));
             }
         }
     }

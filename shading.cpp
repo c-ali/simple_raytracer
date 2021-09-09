@@ -21,12 +21,11 @@ QRgb lamb_shader::shade(hit_record hr, bool in_shadow){
     ogreen += ambient_intensity*sgreen;
     oblue += ambient_intensity*sblue;
     //get and normalize normal vector
-    vec3d normal = hr.get_normal();
-    normal = normal / normal.norm();
+    vec3d normal = hr.get_normal().normalized();
 
     //compute and normalize light incidence vector
-    vec3d light_incidence = hr.get_sect_coords() - light_src                                                                                                                  ;
-    light_incidence = light_incidence / light_incidence.norm();
+    vec3d light_incidence = light_src - hr.get_sect_coords();
+    light_incidence = light_incidence.normalized();
 
     //apply lambertiean shading if is not in shadow
     if(!in_shadow){
@@ -35,6 +34,7 @@ QRgb lamb_shader::shade(hit_record hr, bool in_shadow){
         oblue += sblue * light_intensity * dot;
         ogreen += sgreen * light_intensity * dot;
     }
+
 
     //check bounds
     ored = std::min(255,ored);

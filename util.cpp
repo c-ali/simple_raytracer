@@ -75,7 +75,7 @@ sphere::sphere(vec3d center, float radius) : center(center), radius(radius){};
 
 vec3d sphere::get_normal(vec3d sec_pt){
     //unit normal to the surface
-    vec3d res = (sec_pt - center)/radius;
+    vec3d res = sec_pt - center;
     return res;
 }
 
@@ -91,7 +91,7 @@ bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
     float det = B*B-4*A*C;
     if(det > 0){
         //solution of quadratic form
-        float t_intersect = (-B + std::abs(std::sqrt(det))) / (2*A);
+        float t_intersect = (-B - std::abs(std::sqrt(det))) / (2*A);
         //check if intersection is in the interval [t0,t1]
         if(t0 < t_intersect && t_intersect < t1){
             //fill hit record and report hit
