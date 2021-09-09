@@ -31,6 +31,7 @@ QImage view::render(){
             }
 
             //compute intersection with objects
+            img.setPixelColor(i, j, "white");
             for(int k = 0; k < msh.size(); ++k){
                 ray r = ray(ray_origin, ray_direction);
                 hit_record hr = hit_record();
@@ -38,8 +39,6 @@ QImage view::render(){
                 if(hit)
                     img.setPixel(i,j,s.shade(hr));
                     //img.setPixelColor(i, j, "black");
-                else
-                    img.setPixelColor(i, j, "white");
             }
         }
     }
