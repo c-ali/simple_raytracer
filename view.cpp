@@ -3,10 +3,10 @@
 #include "util.h"
 #include "shading.h"
 
-view::view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst, vec3d light_src) : img_width(width), img_height(height), viewer_pos(viewer_pos), msh(msh), viewing_dst(viewing_dst), light_src(light_src){}
+view::view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst, std::vector<vec3d> light_srcs) : img_width(width), img_height(height), viewer_pos(viewer_pos), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs){}
 
 QImage view::render(){
-    lamb_shader s = lamb_shader(light_src);
+    lamb_shader s = lamb_shader(light_srcs);
     vec3d ray_direction, ray_origin;
     QImage img(img_width, img_height, QImage::Format_RGB16);
     //loop over pixels
@@ -38,19 +38,19 @@ QImage view::render(){
             hit_record sr = hit_record(); //shadow record
 
             //check if ray hits any objec
-            if(msh.hit(light_ray, min_dist, max_dist, hr)){
-                //check for shadow
+            if(msh.hit(light_ray, 0, max_dist, hr)){
                 vec3d sect_pt = hr.get_sect_coords();
-                ray shadow_ray = ray(sect_pt, light_src - sect_pt);
                 if(shadows){
-                    bool in_shadow = msh.hit(shadow_ray, 0.1, max_dist, sr);
-                    if(in_shadow)
-                        img.setPixel(i,j,s.shade(hr, in_shadow));
-                    else
-                        img.setPixel(i,j,s.shade(hr, in_shadow));
+                    std::vector<bool> in_shadow;
+                    //check for shadow by each light source
+                    for(int k = 0; k < light_srcs.size(); ++k){
+                        ray shadow_ray = ray(sect_pt, light_srcs[k] - sect_pt);
+                        in_shadow.push_back(msh.hit(shadow_ray, eps, max_dist, sr));
+                    }
+                    img.setPixel(i,j,s.shade(hr, in_shadow));
                 }
                 else
-                    img.setPixel(i,j,s.shade(hr, false));
+                    img.setPixel(i,j,s.shade(hr, std::vector<bool>(light_srcs.size(),false)));
             }
         }
     }
