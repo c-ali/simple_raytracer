@@ -7,11 +7,11 @@ shader::shader(std::vector<vec3d> light_srcs,vec3d viewer_pos, std::vector<float
     initialize();
 };
 
-void shader::get_surface_color(hit_record hr){
-    QRgb scolor = hr.get_surface_color();
-    sred = qRed(scolor);
-    sgreen = qGreen(scolor);
-    sblue = qBlue(scolor);
+void shader::fetch_surface_color(hit_record &hr){
+    QRgb *scolor = hr.get_surface_color();
+    sred = qRed(*scolor);
+    sgreen = qGreen(*scolor);
+    sblue = qBlue(*scolor);
 }
 
 void shader::initialize(){
@@ -31,23 +31,22 @@ void shader::apply_bounds(){
     ogreen = std::min(255,ogreen);
 }
 
-QRgb shader::shade(hit_record hr, std::vector<bool> in_shadow){
+QRgb shader::shade(hit_record &hr, std::vector<bool> in_shadow){
     initialize();
-    get_surface_color(hr);
+    fetch_surface_color(hr);
     add_ambient();
 
     //get and normalize normal vector
-    vec3d normal = hr.get_normal().normalized();
-    vec3d sect = hr.get_sect_coords();
+    vec3d normal = hr.get_normal()->normalized();
 
     for(int i = 0; i < light_srcs.size(); ++i){
         //compute and normalize light incidence vector
-        vec3d light_incidence = light_srcs[i] - sect;
+        vec3d light_incidence = light_srcs[i] - *hr.get_sect_coords();
         light_incidence = light_incidence.normalized();
 
         //apply lambertiean shading if is not in shadow
         if(!in_shadow[i]){
-            apply_shading(normal, light_incidence, sect, i);
+            apply_shading(normal, light_incidence, *hr.get_sect_coords(), i);
         }
     }
 
@@ -70,8 +69,7 @@ lamb_shader::lamb_shader(std::vector<vec3d> light_srcs, vec3d viewer_pos, std::v
 phong_shader::phong_shader(std::vector<vec3d> light_srcs, vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : shader(light_srcs, viewer_pos, light_intensites, ambient_intensity){};
 
 void phong_shader::apply_shading(vec3d normal, vec3d light_incidence, vec3d sect_coords, int light_src_idx){
-    vec3d v = viewer_pos - sect_coords;
-    vec3d h = v + light_incidence;
+    vec3d h = viewer_pos - sect_coords + light_incidence;
     h = h.normalized();
     float dot1 = std::max((float) 0, normal * light_incidence);
     float dot2 = std::max((float) 0, normal * h);

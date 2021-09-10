@@ -19,7 +19,7 @@ private:
     vec3d u = vec3d(1,0,0); //right
     vec3d v = vec3d(0,-1,0); //up
     vec3d w = vec3d(0,0,1); //-viewing_dir
-    float eps = 0.1;
+    float eps = 0.01;
     float max_dist = 1e10;
 
     mesh msh;

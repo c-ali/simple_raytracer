@@ -40,12 +40,13 @@ QImage view::render(){
 
             //check if ray hits any objec
             if(msh.hit(light_ray, 0, max_dist, hr)){
-                vec3d sect_pt = hr.get_sect_coords();
+                vec3d const *sect_pt = hr.get_sect_coords();
                 if(shadows){
                     std::vector<bool> in_shadow;
                     //check for shadow by each light source
                     for(int k = 0; k < light_srcs.size(); ++k){
-                        ray shadow_ray = ray(sect_pt, light_srcs[k] - sect_pt);
+                        vec3d ray_dir = light_srcs[k] - *sect_pt;
+                        ray shadow_ray = ray(*sect_pt, ray_dir);
                         in_shadow.push_back(msh.hit(shadow_ray, eps, max_dist, sr));
                     }
                     img.setPixel(i,j,s.shade(hr, in_shadow));

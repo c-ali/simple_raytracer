@@ -9,11 +9,11 @@ vec3d vec3d::operator-(){
     return res;
 }
 
-float vec3d::norm(){
+float vec3d::norm() const{
     return std::sqrt(x*x + y*y + z*z);
 }
 
-vec3d vec3d::normalized(){
+vec3d vec3d::normalized() const{
     float n = norm();
     return vec3d(x/n, y/n, z/n);
 }
@@ -47,21 +47,34 @@ float operator*(vec3d first, vec3d second){
     return res;
 }
 
+
+
 vec2d::vec2d(float x, float y) : x(x), y(y){};
+
+
 
 box::box(vec3d min, vec3d max) : min(min), max(max){};
 
-ray::ray(vec3d origin, vec3d dir) : origin(origin), dir(dir){};
+
+
+ray::ray(vec3d origin,vec3d dir) : origin(origin), dir(dir){}
+;
+
+
 
 //getter and setter for hit_record
 hit_record::hit_record(){};
-hit_record::hit_record(float t0, vec3d normal) : t0(t0), normal(normal){};
+
 void hit_record::set_normal(vec3d n){normal = n;};
-vec3d hit_record::get_normal(){return normal;}
-void hit_record::set_sect_coords(vec3d coords){sect_coords = coords;};
-vec3d hit_record::get_sect_coords(){return sect_coords;};
+
+void hit_record::set_sect_coords(vec3d s){sect_coords = s;};
+
 void hit_record::set_surface_color(QRgb color){surface_color = color;};
-QRgb hit_record::get_surface_color(){return surface_color;};
+
+vec3d*  hit_record::get_normal(){return &normal;};
+vec3d*  hit_record::get_sect_coords(){return &sect_coords;};
+QRgb*  hit_record::get_surface_color(){return &surface_color;};
+
 
 bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
     for(int i = 0; i < vertices.size(); ++i){
@@ -71,6 +84,8 @@ bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
     return false;
 }
 
+
+
 sphere::sphere(vec3d center, float radius) : center(center), radius(radius){};
 
 vec3d sphere::get_normal(vec3d sec_pt){
@@ -78,7 +93,6 @@ vec3d sphere::get_normal(vec3d sec_pt){
     vec3d res = sec_pt - center;
     return res;
 }
-
 
 bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
     //Sphere hit equation is a quadratic form
@@ -107,17 +121,20 @@ bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
     return false;
 };
 
-
 box sphere::bounding_box(){
     vec3d min = center - vec3d(radius, radius, radius);
     vec3d max = center + vec3d(radius, radius, radius);
     return box(min, max);
 }
 
+
+
 box triangle::bounding_box(){
     //TODO
     return box(vec3d(), vec3d());
 }
+
+
 
 mesh::mesh(){}
 

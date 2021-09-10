@@ -12,8 +12,8 @@ public:
     vec3d(float x, float y, float z);
     vec3d(); //empty constructor makes 1 vector
     vec3d operator-();
-    float norm(); //returns norm
-    vec3d normalized(); //returns normalized vector
+    float norm() const; //returns norm
+    vec3d normalized() const; //returns normalized vector
 };
 
 vec3d operator-(vec3d first, vec3d second);
@@ -41,25 +41,23 @@ public:
 
 class hit_record {
 private:
-    float t0; //t at intersection
     vec3d normal;
     vec3d sect_coords;
     QRgb surface_color;
 public:
     void set_normal(vec3d normal);
-    vec3d get_normal();
+    vec3d* get_normal();
     void set_sect_coords(vec3d sect_coords);
-    vec3d get_sect_coords();
+    vec3d*  get_sect_coords();
     void set_surface_color(QRgb color);
-    QRgb get_surface_color();
+    QRgb*  get_surface_color();
     hit_record();
-    hit_record(float t0, vec3d normal);
 };
 
 class ray {
 public:
     vec3d origin, dir;
-    ray(vec3d origin, vec3d dir);
+    ray(vec3d origin,vec3d dir);
 };
 
 class surface {
