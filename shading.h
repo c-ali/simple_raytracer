@@ -8,17 +8,22 @@
 class shader{
 protected:
     std::vector<vec3d> light_srcs;
-    float light_intensity;
+    std::vector<float> light_intensites;
     float ambient_intensity;
+    int sred, sgreen, sblue; //surface color RGB values
+    int ored, ogreen, oblue; //output rgb values
+    void get_surface_color(hit_record hr);
+    void initialize();
+    void add_ambient(); //adds ambient shading
 public:
     virtual QRgb shade(hit_record hr, std::vector<bool> in_shadow) = 0;
-    shader(std::vector<vec3d> light_srcs, float light_intensity, float ambient_intensity);
+    shader(std::vector<vec3d> light_srcs, std::vector<float> light_intensites, float ambient_intensity);
 };
 
 class lamb_shader : public shader{
 public:
     QRgb shade(hit_record hr, std::vector<bool> in_shadow) override; //in_shadow indicates for each light source if the object is in the shadows or not
-    lamb_shader(std::vector<vec3d> light_srcs, float light_intensity = 1, float ambient_intensity = 0.3);
+    lamb_shader(std::vector<vec3d> light_srcs, std::vector<float> light_intensites, float ambient_intensity = 0.3);
 };
 
 #endif // SHADING_H

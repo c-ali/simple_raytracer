@@ -14,6 +14,7 @@ QImage test_scene(){
     std::vector<vec3d> light_srcs;
     vec3d l1 = vec3d(3,0,0);
     vec3d l2 = vec3d(-3,8,0);
+    std::vector<float> light_intensities {1,0.4};
 
     mesh msh = mesh();
     vec3d viewer_pos = vec3d(0,0,5);
@@ -23,7 +24,7 @@ QImage test_scene(){
     msh.add_surface(sph_);
     light_srcs.push_back(l1);
     light_srcs.push_back(l2);
-    view v = view(width,height, viewer_pos, msh, viewing_dst, light_srcs);
+    view v = view(width,height, viewer_pos, msh, viewing_dst, light_srcs, light_intensities);
     QImage img = v.render();
     return img;
 }
