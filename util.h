@@ -22,7 +22,7 @@ vec3d operator*(vec3d vec, float scalar);
 vec3d operator*(float scalar, vec3d vec);
 float operator*(vec3d first, vec3d second); //scalar product
 vec3d operator/(vec3d vec, float scalar);
-
+vec3d cross(vec3d first, vec3d second);
 
 class vec2d {
 private:
@@ -84,9 +84,13 @@ class triangle : public surface {
 private:
     vec3d v1, v2, v3;
     vec3d n1, n2, n3;
+    QRgb color =  qRgb(0,255,0);
+    vec3d get_normal(vec3d sec_pt) override;
 public:
     triangle(vec3d v1,vec3d v2,vec3d v3,vec3d n1,vec3d n2,vec3d n3);
+    triangle(vec3d v1,vec3d v2,vec3d v3);
     box bounding_box() override;
+    bool hit(ray r, float t0, float t1, hit_record &rec) override;
 };
 
 class mesh {

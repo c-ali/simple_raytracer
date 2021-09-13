@@ -47,7 +47,13 @@ float operator*(vec3d first, vec3d second){
     return res;
 }
 
-
+vec3d cross(vec3d first, vec3d second){
+    vec3d res;
+    res.x = first.y * second.z - first.z * second.y;
+    res.y = first.z * second.x - first.x * second.z;
+    res.z = first.x * second.y - first.y * second.x;
+    return res;
+}
 
 vec2d::vec2d(float x, float y) : x(x), y(y){};
 
@@ -128,6 +134,64 @@ box sphere::bounding_box(){
 }
 
 
+
+triangle::triangle(vec3d v1,vec3d v2,vec3d v3,vec3d n1,vec3d n2,vec3d n3) : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3){};
+
+triangle::triangle(vec3d v1,vec3d v2,vec3d v3) : v1(v1), v2(v2), v3(v3){};
+
+bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
+
+    int a = v1.x - v2.x;
+    int b = v1.y - v2.y;
+    int c = v1.z - v2.z;
+    int d = v1.x - v3.x;
+    int e = v1.y - v3.y;
+    int f = v1.z - v3.z;
+    int g = r.dir.x;
+    int h = r.dir.y;
+    int i = r.dir.z;
+    int j = v1.x - r.origin.x;
+    int k = v1.y - r.origin.y;
+    int l = v1.z - r.origin.z;
+
+    int ak_minus_jb = a * k - j * b;
+    int jc_minus_al = j * c - a * l;
+    int bl_minus_kc = b * l - a * c;
+    int ei_minus_hf = e * i - h * f;
+    int gf_minus_di = g * f - d * i;
+    int dh_minus_eg = d * h - e * g;
+
+    int M = a * ei_minus_hf + b * gf_minus_di + c * dh_minus_eg;
+
+    if(M == 0){
+        return false;
+    }
+
+    int t = - (f * ak_minus_jb + e * jc_minus_al + d * bl_minus_kc)/M;
+    if(t < t0 || t > t1)
+        return false;
+
+    int gamma = (i * ak_minus_jb + h * jc_minus_al + g * bl_minus_kc) / M;
+    if(gamma < 0 || gamma > 1)
+        return false;
+
+    int beta = (j * ei_minus_hf + k * gf_minus_di + l * dh_minus_eg) / M;
+    if(beta < 0 || beta > (1 - gamma))
+        return false;
+
+
+    //fill HR
+    vec3d intersect_coord = r.origin + t * r.dir;
+    rec.set_sect_coords(intersect_coord);
+    rec.set_normal(get_normal(intersect_coord));
+    rec.set_surface_color(color);
+
+    return true;
+};
+
+vec3d triangle::get_normal(vec3d sec_pt){
+    return cross(v1, v2);
+}
 
 box triangle::bounding_box(){
     //TODO
