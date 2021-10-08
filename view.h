@@ -5,14 +5,16 @@
 #include <QImage>
 #include <QColor>
 #include "util.h"
-
+#include "data_structures.h"
 
 class view
 {
 private:
+    int img_width, img_height;
     vec3d viewer_pos;
-    std::vector<vec3d> light_srcs;
+    mesh msh;
     float viewing_dst;
+    std::vector<vec3d> light_srcs;
     bool shadows = true;
     std::vector<float> light_intensites;
 
@@ -22,8 +24,6 @@ private:
     float eps = 0.01;
     float max_dist = 1e10;
 
-    mesh msh;
-    int img_width, img_height;
     const char MODE = 'p'; // p = perspectivic; o = orthographic
 public:
     QImage render();

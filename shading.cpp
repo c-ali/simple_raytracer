@@ -39,7 +39,7 @@ QRgb shader::shade(hit_record &hr, std::vector<bool> in_shadow){
     //get and normalize normal vector
     vec3d normal = hr.get_normal()->normalized();
 
-    for(int i = 0; i < light_srcs.size(); ++i){
+    for(size_t i = 0; i < light_srcs.size(); ++i){
         //compute and normalize light incidence vector
         vec3d light_incidence = light_srcs[i] - *hr.get_sect_coords();
         light_incidence = light_incidence.normalized();
@@ -69,7 +69,7 @@ lamb_shader::lamb_shader(std::vector<vec3d> light_srcs, vec3d viewer_pos, std::v
 phong_shader::phong_shader(std::vector<vec3d> light_srcs, vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : shader(light_srcs, viewer_pos, light_intensites, ambient_intensity){};
 
 void phong_shader::apply_shading(vec3d normal, vec3d light_incidence, vec3d sect_coords, int light_src_idx){
-    vec3d h = viewer_pos - sect_coords + light_incidence;
+    vec3d h = (viewer_pos - sect_coords).normalized() + light_incidence;
     h = h.normalized();
     float dot1 = std::max((float) 0, normal * light_incidence);
     float dot2 = std::max((float) 0, normal * h);
