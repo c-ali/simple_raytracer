@@ -33,11 +33,26 @@ QImage test_scene(){
     return img;
 }
 
+QImage view_mesh(){
+    int width = 500;
+    int height = 500;
+    float viewing_dst = 2;
+    //vec3d light_src = vec3d(3,8,-5);
+    std::vector<vec3d> light_srcs;
+    vec3d l1 = vec3d(10,0,10);
+    vec3d l2 = vec3d(0,0,10);
+    std::vector<float> light_intensities {2,2};
+
+    mesh msh = mesh();
+    msh.read_obj("cube.obj");
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QPixmap image;
-    QImage img = test_scene();
+    //QImage img = test_scene();
+    QImage img = view_mesh();
     image = QPixmap::fromImage(img);
     //image.fill(Qt::black);
 

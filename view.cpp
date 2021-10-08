@@ -44,7 +44,7 @@ QImage view::render(){
                 if(shadows){
                     std::vector<bool> in_shadow;
                     //check for shadow by each light source
-                    for(int k = 0; k < light_srcs.size(); ++k){
+                    for(size_t k = 0; k < light_srcs.size(); ++k){
                         vec3d ray_dir = light_srcs[k] - *sect_pt;
                         ray shadow_ray = ray(*sect_pt, ray_dir);
                         in_shadow.push_back(msh.hit(shadow_ray, eps, max_dist, sr));

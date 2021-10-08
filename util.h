@@ -60,26 +60,8 @@ public:
     ray(vec3d origin,vec3d dir);
 };
 
-class surface {
-private:
-    virtual vec3d get_normal(vec3d sec_pt) = 0; //gets unit normal to the surface
-public:
-    virtual bool hit(ray r, float t0, float t1, hit_record &rec) = 0;
-    virtual box bounding_box() = 0;
-};
 
-class sphere : public surface {
-private:
-    vec3d center;
-    float radius;
-    vec3d get_normal(vec3d sec_pt) override;
-    QRgb color = qRgb(0,255,0);
-public:
-    sphere(vec3d center, float radius);
-    box bounding_box() override;
-    bool hit(ray r, float t0, float t1, hit_record &rec) override;
-};
-
+<<<<<<< HEAD
 class triangle : public surface {
 private:
     vec3d v1, v2, v3;
@@ -103,5 +85,7 @@ public:
     std::shared_ptr<surface> operator[](size_t idx);
     bool hit(ray r, float t0, float t1, hit_record &rec);
 };
+=======
+>>>>>>> origin/main
 
 #endif // UTIL_H

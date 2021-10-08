@@ -82,6 +82,7 @@ vec3d*  hit_record::get_sect_coords(){return &sect_coords;};
 QRgb*  hit_record::get_surface_color(){return &surface_color;};
 
 
+<<<<<<< HEAD
 bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
     for(int i = 0; i < vertices.size(); ++i){
         if(vertices.at(i)->hit(r, t0, t1, rec))
@@ -214,3 +215,5 @@ std::shared_ptr<surface> mesh::operator[](size_t idx){
     return vertices.at(idx);
 }
 
+=======
+>>>>>>> origin/main
