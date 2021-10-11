@@ -1,10 +1,10 @@
 #include <iostream>
 #include "view.h"
-#include "util.h"
+#include "algebra.h"
 #include "shading.h"
 
-view::view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst, std::vector<vec3d> light_srcs, std::vector<float> light_intensites) :
-    img_width(width), img_height(height), viewer_pos(viewer_pos), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs), light_intensites(light_intensites){}
+view::view(int width, int height, vec3d viewer_pos, vec3d viewing_dir, mesh msh, float viewing_dst, std::vector<vec3d> light_srcs, std::vector<float> light_intensites) :
+    img_width(width), img_height(height), viewer_pos(viewer_pos), w(viewing_dir), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs), light_intensites(light_intensites){}
 
 QImage view::render(){
     phong_shader s = phong_shader(light_srcs, viewer_pos, light_intensites);

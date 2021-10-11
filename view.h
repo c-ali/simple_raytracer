@@ -4,8 +4,8 @@
 #include <vector>
 #include <QImage>
 #include <QColor>
-#include "util.h"
-#include "data_structures.h"
+#include "algebra.h"
+#include "geometry.h"
 
 class view
 {
@@ -27,7 +27,7 @@ private:
     const char MODE = 'p'; // p = perspectivic; o = orthographic
 public:
     QImage render();
-    view(int width, int height, vec3d viewer_pos, mesh msh, float viewing_dst, std::vector<vec3d> light_srcs, std::vector<float> light_intensites);
+    view(int width, int height, vec3d viewer_pos, vec3d viewing_dir, mesh msh, float viewing_dst, std::vector<vec3d> light_srcs, std::vector<float> light_intensites);
 };
 
 #endif // VIEW_H

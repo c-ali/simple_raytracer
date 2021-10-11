@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef ALGEBRA_H
+#define ALGEBRA_H
 
 #include <vector>
 #include <cstddef>
@@ -61,31 +61,4 @@ public:
 };
 
 
-<<<<<<< HEAD
-class triangle : public surface {
-private:
-    vec3d v1, v2, v3;
-    vec3d n1, n2, n3;
-    QRgb color =  qRgb(0,255,0);
-    vec3d get_normal(vec3d sec_pt) override;
-public:
-    triangle(vec3d v1,vec3d v2,vec3d v3,vec3d n1,vec3d n2,vec3d n3);
-    triangle(vec3d v1,vec3d v2,vec3d v3);
-    box bounding_box() override;
-    bool hit(ray r, float t0, float t1, hit_record &rec) override;
-};
-
-class mesh {
-private:
-   std::vector<std::shared_ptr<surface>> vertices;
-public:
-    int size();
-    void add_surface(std::shared_ptr<surface> new_surface);
-    mesh();
-    std::shared_ptr<surface> operator[](size_t idx);
-    bool hit(ray r, float t0, float t1, hit_record &rec);
-};
-=======
->>>>>>> origin/main
-
-#endif // UTIL_H
+#endif // ALGEBRA_H

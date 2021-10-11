@@ -69,13 +69,9 @@ lamb_shader::lamb_shader(std::vector<vec3d> light_srcs, vec3d viewer_pos, std::v
 phong_shader::phong_shader(std::vector<vec3d> light_srcs, vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : shader(light_srcs, viewer_pos, light_intensites, ambient_intensity){};
 
 void phong_shader::apply_shading(vec3d normal, vec3d light_incidence, vec3d sect_coords, int light_src_idx){
-<<<<<<< HEAD
     vec3d h = viewer_pos - sect_coords;
     h = h.normalized();
     h = light_incidence + h;
-=======
-    vec3d h = (viewer_pos - sect_coords).normalized() + light_incidence;
->>>>>>> origin/main
     h = h.normalized();
     float dot1 = std::max((float) 0, normal * light_incidence);
     float dot2 = std::max((float) 0, normal * h);

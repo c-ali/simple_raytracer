@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "data_structures.h"
+#include "geometry.h"
 
 using std::make_shared;
 
@@ -71,12 +71,60 @@ triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::sh
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
 
 vec3d triangle::get_normal(vec3d sec_pt){
-    vec3d normal = (*n1 + *n2 + *n3)/3;
+    vec3d normal = cross((*v1 - *v2),(*v1 - *v3));
+    normal = normal.normalized();
     return normal;
 };
 
-bool triangle::hit(ray r, float t0, float t1, hit_record &rec){}
+bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
 
+    float a = v1->x - v2->x;
+    float b = v1->y - v2->y;
+    float c = v1->z - v2->z;
+    float d = v1->x - v3->x;
+    float e = v1->y - v3->y;
+    float f = v1->z - v3->z;
+    float g = r.dir.x;
+    float h = r.dir.y;
+    float i = r.dir.z;
+    float j = v1->x - r.origin.x;
+    float k = v1->y - r.origin.y;
+    float l = v1->z - r.origin.z;
+
+    float ak_minus_jb = a * k - j * b;
+    float jc_minus_al = j * c - a * l;
+    float bl_minus_kc = b * l - k * c;
+    float ei_minus_hf = e * i - h * f;
+    float gf_minus_di = g * f - d * i;
+    float dh_minus_eg = d * h - e * g;
+
+    float M = a * ei_minus_hf + b * gf_minus_di + c * dh_minus_eg;
+
+    if(M == 0){
+        return false;
+    }
+
+    float t = - (f * ak_minus_jb + e * jc_minus_al + d * bl_minus_kc) / M;
+    if(t < t0 || t > t1)
+        return false;
+
+    float gamma = (i * ak_minus_jb + h * jc_minus_al + g * bl_minus_kc) / M;
+    if(gamma < 0 || gamma > 1)
+        return false;
+
+    float beta = (j * ei_minus_hf + k * gf_minus_di + l * dh_minus_eg) / M;
+    if(beta < 0 || beta > (1 - gamma))
+        return false;
+
+
+    //fill HR
+    vec3d intersect_coord = r.origin + t * r.dir;
+    rec.set_sect_coords(intersect_coord);
+    rec.set_normal(get_normal(intersect_coord));
+    rec.set_surface_color(color);
+
+    return true;
+};
 mesh::mesh(){}
 
 void mesh::add_surface(std::shared_ptr<surface> new_surface){
@@ -127,28 +175,45 @@ void mesh::read_obj(const char* path){
         if(line.substr(0,2) == "f "){
             if(normals_present){
                 std::string current_block;
-                int delimiter_pos;
-                std::vector<int> v_idxs, n_idxs;
+                std::vector<int> idxs;
                 for(int i=0; i < 3; ++i){
                     content>>current_block;
-                    delimiter_pos = current_block.find("//");
-                    v_idxs.push_back(std::stoi(current_block.substr(0,delimiter_pos)));
-                    n_idxs.push_back(std::stoi(current_block.substr(delimiter_pos+2, current_block.size())));
+                    while(current_block.find("/") != std::string::npos){
+                        int delimiter_pos = current_block.find("/");
+                        if(delimiter_pos > 0)
+                            idxs.push_back(std::stoi(current_block.substr(0,delimiter_pos)));
+                        current_block = current_block.substr(delimiter_pos+1);
+                    }
+                    idxs.push_back(std::stoi(current_block));
                 }
-                faces.push_back(make_shared<triangle>(make_shared<vec3d>(vertices[v_idxs[0]]), make_shared<vec3d>(vertices[v_idxs[1]]), make_shared<vec3d>(vertices[v_idxs[2]]),
-                                                      make_shared<vec3d>(normals[n_idxs[0]]), make_shared<vec3d>(normals[n_idxs[1]]), make_shared<vec3d>(normals[n_idxs[2]])));
+                //if has textures, ignore for now
+                if(idxs.size() > 6)
+                    faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[3])), make_shared<vec3d>(get_vertex(idxs[6])),
+                                                          make_shared<vec3d>(get_normal(idxs[2])), make_shared<vec3d>(get_normal(idxs[5])), make_shared<vec3d>(get_normal(idxs[8]))));
+                else
+                    faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[1])), make_shared<vec3d>(get_vertex(idxs[2])),
+                                                      make_shared<vec3d>(get_normal(idxs[0])), make_shared<vec3d>(get_normal(idxs[1])), make_shared<vec3d>(get_normal(idxs[2]))));
             }
             else{
-                std::vector<int> v_idxs;
+                std::vector<int> idxs;
                 int v_idx;
                 for(int i=0; i < 3; ++i){
                    content>>v_idx;
-                    v_idxs.push_back(v_idx);
+                    idxs.push_back(v_idx);
                 }
 
-                faces.push_back(make_shared<triangle>(make_shared<vec3d>(vertices[v_idxs[0]]), make_shared<vec3d>(vertices[v_idxs[1]]), make_shared<vec3d>(vertices[v_idxs[2]])));
+                faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[1])), make_shared<vec3d>(get_vertex(idxs[2]))));
             }
         }
     }
-    int x = 5;
+}
+
+//since objs are 1-indexed, we write a getter-function
+vec3d mesh::get_vertex(int idx){
+    return vertices.at(idx-1);
+}
+
+//since objs are 1-indexed, we write a getter-function
+vec3d mesh::get_normal(int idx){
+    return normals.at(idx-1);
 }

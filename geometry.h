@@ -1,7 +1,7 @@
-#ifndef DATA_STRUCTURES_H
-#define DATA_STRUCTURES_H
+#ifndef GEOMETRY_H
+#define GEOMETRY_H
 
-#include "util.h"
+#include "algebra.h"
 
 class surface {
 private:
@@ -25,6 +25,7 @@ public:
 
 class triangle : public surface {
 private:
+    QRgb color = qRgb(0,255,0);
     std::shared_ptr<vec3d> v1, v2, v3;
     std::shared_ptr<vec3d> n1, n2, n3;
     bool has_normals;
@@ -40,6 +41,8 @@ class mesh {
 private:
    std::vector<std::shared_ptr<surface>> faces;
    std::vector<vec3d> vertices, normals;
+   vec3d get_normal(int idx);
+   vec3d get_vertex(int idx);
 public:
     int size();
     void add_surface(std::shared_ptr<surface> new_surface);
@@ -49,4 +52,4 @@ public:
     void read_obj(const char* path);
 };
 
-#endif // DATA_STRUCTURES_H
+#endif // GEOMETRY_H
