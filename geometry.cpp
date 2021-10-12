@@ -83,12 +83,12 @@ void mesh::read_obj(const char* path){
                 }
                 if(idxs.size() > 6)
                     //case has textures, ignore for now
-                    faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[3])), make_shared<vec3d>(get_vertex(idxs[6])),
-                                                          make_shared<vec3d>(get_normal(idxs[2])), make_shared<vec3d>(get_normal(idxs[5])), make_shared<vec3d>(get_normal(idxs[8]))));
+                    faces.push_back(make_shared<triangle>(vec3d(get_vertex(idxs[0])), vec3d(get_vertex(idxs[3])), vec3d(get_vertex(idxs[6])),
+                                                          vec3d(get_normal(idxs[2])), vec3d(get_normal(idxs[5])), vec3d(get_normal(idxs[8]))));
                 else
                     //case has no textures but normals
-                    faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[2])), make_shared<vec3d>(get_vertex(idxs[4])),
-                                                      make_shared<vec3d>(get_normal(idxs[1])), make_shared<vec3d>(get_normal(idxs[3])), make_shared<vec3d>(get_normal(idxs[5]))));
+                    faces.push_back(make_shared<triangle>(vec3d(get_vertex(idxs[0])), vec3d(get_vertex(idxs[2])), vec3d(get_vertex(idxs[4])),
+                                                      vec3d(get_normal(idxs[1])), vec3d(get_normal(idxs[3])), vec3d(get_normal(idxs[5]))));
             }
             else{
                 //case has only vertices
@@ -99,7 +99,7 @@ void mesh::read_obj(const char* path){
                     idxs.push_back(v_idx);
                 }
 
-                faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[1])), make_shared<vec3d>(get_vertex(idxs[2]))));
+                faces.push_back(make_shared<triangle>(vec3d(get_vertex(idxs[0])), vec3d(get_vertex(idxs[1])), vec3d(get_vertex(idxs[2]))));
             }
         }
     }
@@ -162,25 +162,25 @@ box triangle::bounding_box(){
     return box(vec3d(), vec3d());
 };
 
-triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::shared_ptr<vec3d> v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
+triangle::triangle(vec3d v1, vec3d v2, vec3d v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
 
-triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::shared_ptr<vec3d> v3, std::shared_ptr<vec3d> n1, std::shared_ptr<vec3d> n2, std::shared_ptr<vec3d> n3)
+triangle::triangle(vec3d v1, vec3d v2, vec3d v3, vec3d n1, vec3d n2, vec3d n3)
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
 
 bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
     //solve linear system
-    float a = v1->x - v2->x;
-    float b = v1->y - v2->y;
-    float c = v1->z - v2->z;
-    float d = v1->x - v3->x;
-    float e = v1->y - v3->y;
-    float f = v1->z - v3->z;
+    float a = v1.x - v2.x;
+    float b = v1.y - v2.y;
+    float c = v1.z - v2.z;
+    float d = v1.x - v3.x;
+    float e = v1.y - v3.y;
+    float f = v1.z - v3.z;
     float g = r.dir.x;
     float h = r.dir.y;
     float i = r.dir.z;
-    float j = v1->x - r.origin.x;
-    float k = v1->y - r.origin.y;
-    float l = v1->z - r.origin.z;
+    float j = v1.x - r.origin.x;
+    float k = v1.y - r.origin.y;
+    float l = v1.z - r.origin.z;
 
     float ak_minus_jb = a * k - j * b;
     float jc_minus_al = j * c - a * l;
@@ -214,13 +214,13 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
     //compute normals
     vec3d normal;
     if(has_normals){
-        normal = (*n1 + *n2 + *n3);
+        normal = (n1 + n2 + n3);
         if(interpolate_normals){
-            normal = (1 - gamma - beta) * *n1 + (beta) * *n2 + gamma * *n3;
+            normal = (1 - gamma - beta) * n1 + (beta) * n2 + gamma * n3;
         }
     }
     else
-        normal = cross((*v2 - *v1),(*v3 - *v1));
+        normal = cross((v2 - v1),(v3 - v1));
     normal = normal.normalized();
 
     rec.register_hit(normal, intersect_coord, color, t);

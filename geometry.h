@@ -24,13 +24,13 @@ public:
 class triangle : public surface {
 private:
     QRgb color = qRgb(0,255,0);
-    std::shared_ptr<vec3d> v1, v2, v3;
-    std::shared_ptr<vec3d> n1, n2, n3;
+    vec3d v1, v2, v3;
+    vec3d n1, n2, n3;
     bool has_normals;
     bool interpolate_normals = true;
 public:
-    triangle(std::shared_ptr<vec3d> v1,std::shared_ptr<vec3d> v2,std::shared_ptr<vec3d> v3,std::shared_ptr<vec3d> n1,std::shared_ptr<vec3d> n2,std::shared_ptr<vec3d> n3);
-    triangle(std::shared_ptr<vec3d> v1,std::shared_ptr<vec3d> v2,std::shared_ptr<vec3d> v3);
+    triangle(vec3d v1,vec3d v2,vec3d v3,vec3d n1,vec3d n2,vec3d n3);
+    triangle(vec3d v1,vec3d v2,vec3d v3);
     box bounding_box() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;
 };
