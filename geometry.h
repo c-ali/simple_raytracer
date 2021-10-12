@@ -4,8 +4,6 @@
 #include "algebra.h"
 
 class surface {
-private:
-    virtual vec3d get_normal(vec3d sec_pt) = 0; //gets unit normal to the surface
 public:
     virtual bool hit(ray r, float t0, float t1, hit_record &rec) = 0;
     virtual box bounding_box() = 0;
@@ -15,7 +13,7 @@ class sphere : public surface {
 private:
     vec3d center;
     float radius;
-    vec3d get_normal(vec3d sec_pt) override;
+    vec3d get_normal(vec3d sec_pt);
     QRgb color = qRgb(0,255,0);
 public:
     sphere(vec3d center, float radius);
@@ -29,7 +27,7 @@ private:
     std::shared_ptr<vec3d> v1, v2, v3;
     std::shared_ptr<vec3d> n1, n2, n3;
     bool has_normals;
-    vec3d get_normal(vec3d sec_pt) override;
+    bool interpolate_normals = true;
 public:
     triangle(std::shared_ptr<vec3d> v1,std::shared_ptr<vec3d> v2,std::shared_ptr<vec3d> v3,std::shared_ptr<vec3d> n1,std::shared_ptr<vec3d> n2,std::shared_ptr<vec3d> n3);
     triangle(std::shared_ptr<vec3d> v1,std::shared_ptr<vec3d> v2,std::shared_ptr<vec3d> v3);

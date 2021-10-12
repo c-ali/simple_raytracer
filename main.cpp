@@ -48,7 +48,7 @@ QImage view_mesh(){
     light_srcs.push_back(l1);
 
     mesh msh = mesh();
-    msh.read_obj("teapot.obj");
+    msh.read_obj("sphere.obj");
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, light_srcs, light_intensities);
     QImage img = v.render();
     return img;

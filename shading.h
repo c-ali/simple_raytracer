@@ -27,7 +27,7 @@ class lamb_shader : public shader{
 private:
     void apply_shading(vec3d normal, vec3d light_incidence, vec3d sect_coords, int light_src_idx) override;
 public:
-    lamb_shader(std::vector<vec3d> light_srcs,vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity = 0.3);
+    lamb_shader(std::vector<vec3d> light_srcs,vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity = 0.4);
 };
 
 class phong_shader : public shader{
@@ -36,7 +36,7 @@ private:
     std::vector<int> specular_color {100,100,100};
     void apply_shading(vec3d normal, vec3d light_incidence, vec3d sect_coords, int light_src_idx) override;
 public:
-    phong_shader(std::vector<vec3d> light_srcs,vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity = 0.3);
+    phong_shader(std::vector<vec3d> light_srcs,vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity = 0.4);
 };
 
 #endif // SHADING_H

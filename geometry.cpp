@@ -167,18 +167,8 @@ triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::sh
 triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::shared_ptr<vec3d> v3, std::shared_ptr<vec3d> n1, std::shared_ptr<vec3d> n2, std::shared_ptr<vec3d> n3)
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
 
-vec3d triangle::get_normal(vec3d sec_pt){
-    vec3d normal;
-    if(has_normals)
-        normal = (*n1 + *n2 + *n3);
-    else
-        normal = cross((*v2 - *v1),(*v3 - *v1));
-    normal = normal.normalized();
-    return normal;
-};
-
 bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
-
+    //solve linear system
     float a = v1->x - v2->x;
     float b = v1->y - v2->y;
     float c = v1->z - v2->z;
@@ -218,9 +208,22 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
         return false;
 
 
-    //fill HR
+    //compute intersection
     vec3d intersect_coord = r.origin + t * r.dir;
-    rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t);
+
+    //compute normals
+    vec3d normal;
+    if(has_normals){
+        normal = (*n1 + *n2 + *n3);
+        if(interpolate_normals){
+            normal = (1 - gamma - beta) * *n1 + (beta) * *n2 + gamma * *n3;
+        }
+    }
+    else
+        normal = cross((*v2 - *v1),(*v3 - *v1));
+    normal = normal.normalized();
+
+    rec.register_hit(normal, intersect_coord, color, t);
 
     return true;
 };
