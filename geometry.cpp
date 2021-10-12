@@ -8,123 +8,18 @@
 using std::make_shared;
 
 bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
+    bool hit = false;
+    float t = t1;
+
     for(size_t i = 0; i < faces.size(); ++i){
-        if(faces.at(i)->hit(r, t0, t1, rec))
-            return true;
-    }
-    return false;
-}
-
-
-
-sphere::sphere(vec3d center, float radius) : center(center), radius(radius){};
-
-vec3d sphere::get_normal(vec3d sec_pt){
-    //unit normal to the surface
-    vec3d res = sec_pt - center;
-    return res;
-}
-
-bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
-    //Sphere hit equation is a quadratic form
-    //At^2 + Bt + C = 0
-    float A = r.dir * r.dir;
-    float B = r.dir*(r.origin-center)*2;
-    float C = (r.origin - center) * (r.origin - center) - radius*radius;
-
-    //first compute determinant if intersection is even there
-    float det = B*B-4*A*C;
-    if(det > 0){
-        //solution of quadratic form
-        float t_intersect = (-B - std::abs(std::sqrt(det))) / (2*A);
-        //check if intersection is in the interval [t0,t1]
-        if(t0 < t_intersect && t_intersect < t1){
-            //fill hit record and report hit
-            //get section coordinate, normal and color
-            vec3d intersect_coord = r.origin + t_intersect * r.dir;
-            rec.set_sect_coords(intersect_coord);
-            rec.set_normal(get_normal(intersect_coord));
-            rec.set_surface_color(color);
-
-            return true;
+        if(faces.at(i)->hit(r, t0, t, rec)){
+            hit = true;
+            t = rec.get_dist();
         }
     }
-    return false;
-};
+    return hit;
+}
 
-box sphere::bounding_box(){
-    vec3d min = center - vec3d(radius, radius, radius);
-    vec3d max = center + vec3d(radius, radius, radius);
-    return box(min, max);
-};
-
-
-
-box triangle::bounding_box(){
-    //TODO
-    return box(vec3d(), vec3d());
-};
-
-triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::shared_ptr<vec3d> v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
-
-triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::shared_ptr<vec3d> v3, std::shared_ptr<vec3d> n1, std::shared_ptr<vec3d> n2, std::shared_ptr<vec3d> n3)
-    : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
-
-vec3d triangle::get_normal(vec3d sec_pt){
-    vec3d normal = cross((*v1 - *v2),(*v1 - *v3));
-    normal = normal.normalized();
-    return normal;
-};
-
-bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
-
-    float a = v1->x - v2->x;
-    float b = v1->y - v2->y;
-    float c = v1->z - v2->z;
-    float d = v1->x - v3->x;
-    float e = v1->y - v3->y;
-    float f = v1->z - v3->z;
-    float g = r.dir.x;
-    float h = r.dir.y;
-    float i = r.dir.z;
-    float j = v1->x - r.origin.x;
-    float k = v1->y - r.origin.y;
-    float l = v1->z - r.origin.z;
-
-    float ak_minus_jb = a * k - j * b;
-    float jc_minus_al = j * c - a * l;
-    float bl_minus_kc = b * l - k * c;
-    float ei_minus_hf = e * i - h * f;
-    float gf_minus_di = g * f - d * i;
-    float dh_minus_eg = d * h - e * g;
-
-    float M = a * ei_minus_hf + b * gf_minus_di + c * dh_minus_eg;
-
-    if(M == 0){
-        return false;
-    }
-
-    float t = - (f * ak_minus_jb + e * jc_minus_al + d * bl_minus_kc) / M;
-    if(t < t0 || t > t1)
-        return false;
-
-    float gamma = (i * ak_minus_jb + h * jc_minus_al + g * bl_minus_kc) / M;
-    if(gamma < 0 || gamma > 1)
-        return false;
-
-    float beta = (j * ei_minus_hf + k * gf_minus_di + l * dh_minus_eg) / M;
-    if(beta < 0 || beta > (1 - gamma))
-        return false;
-
-
-    //fill HR
-    vec3d intersect_coord = r.origin + t * r.dir;
-    rec.set_sect_coords(intersect_coord);
-    rec.set_normal(get_normal(intersect_coord));
-    rec.set_surface_color(color);
-
-    return true;
-};
 mesh::mesh(){}
 
 void mesh::add_surface(std::shared_ptr<surface> new_surface){
@@ -186,15 +81,17 @@ void mesh::read_obj(const char* path){
                     }
                     idxs.push_back(std::stoi(current_block));
                 }
-                //if has textures, ignore for now
                 if(idxs.size() > 6)
+                    //case has textures, ignore for now
                     faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[3])), make_shared<vec3d>(get_vertex(idxs[6])),
                                                           make_shared<vec3d>(get_normal(idxs[2])), make_shared<vec3d>(get_normal(idxs[5])), make_shared<vec3d>(get_normal(idxs[8]))));
                 else
-                    faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[1])), make_shared<vec3d>(get_vertex(idxs[2])),
-                                                      make_shared<vec3d>(get_normal(idxs[0])), make_shared<vec3d>(get_normal(idxs[1])), make_shared<vec3d>(get_normal(idxs[2]))));
+                    //case has no textures but normals
+                    faces.push_back(make_shared<triangle>(make_shared<vec3d>(get_vertex(idxs[0])), make_shared<vec3d>(get_vertex(idxs[2])), make_shared<vec3d>(get_vertex(idxs[4])),
+                                                      make_shared<vec3d>(get_normal(idxs[1])), make_shared<vec3d>(get_normal(idxs[3])), make_shared<vec3d>(get_normal(idxs[5]))));
             }
             else{
+                //case has only vertices
                 std::vector<int> idxs;
                 int v_idx;
                 for(int i=0; i < 3; ++i){
@@ -217,3 +114,113 @@ vec3d mesh::get_vertex(int idx){
 vec3d mesh::get_normal(int idx){
     return normals.at(idx-1);
 }
+
+
+sphere::sphere(vec3d center, float radius) : center(center), radius(radius){};
+
+vec3d sphere::get_normal(vec3d sec_pt){
+    //unit normal to the surface
+    vec3d res = sec_pt - center;
+    return res;
+}
+
+bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
+    //Sphere hit equation is a quadratic form
+    //At^2 + Bt + C = 0
+    float A = r.dir * r.dir;
+    float B = r.dir*(r.origin-center)*2;
+    float C = (r.origin - center) * (r.origin - center) - radius*radius;
+
+    //first compute determinant if intersection is even there
+    float det = B*B-4*A*C;
+    if(det > 0){
+        //solution of quadratic form
+        float t_intersect = (-B - std::abs(std::sqrt(det))) / (2*A);
+        //check if intersection is in the interval [t0,t1]
+        if(t0 < t_intersect && t_intersect < t1){
+            //fill hit record and report hit
+            //get section coordinate, normal and color
+            vec3d intersect_coord = r.origin + t_intersect * r.dir;
+            rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t_intersect);
+
+            return true;
+        }
+    }
+    return false;
+};
+
+box sphere::bounding_box(){
+    vec3d min = center - vec3d(radius, radius, radius);
+    vec3d max = center + vec3d(radius, radius, radius);
+    return box(min, max);
+};
+
+
+
+box triangle::bounding_box(){
+    //TODO
+    return box(vec3d(), vec3d());
+};
+
+triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::shared_ptr<vec3d> v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
+
+triangle::triangle(std::shared_ptr<vec3d> v1, std::shared_ptr<vec3d> v2, std::shared_ptr<vec3d> v3, std::shared_ptr<vec3d> n1, std::shared_ptr<vec3d> n2, std::shared_ptr<vec3d> n3)
+    : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
+
+vec3d triangle::get_normal(vec3d sec_pt){
+    vec3d normal;
+    if(has_normals)
+        normal = (*n1 + *n2 + *n3);
+    else
+        normal = cross((*v2 - *v1),(*v3 - *v1));
+    normal = normal.normalized();
+    return normal;
+};
+
+bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
+
+    float a = v1->x - v2->x;
+    float b = v1->y - v2->y;
+    float c = v1->z - v2->z;
+    float d = v1->x - v3->x;
+    float e = v1->y - v3->y;
+    float f = v1->z - v3->z;
+    float g = r.dir.x;
+    float h = r.dir.y;
+    float i = r.dir.z;
+    float j = v1->x - r.origin.x;
+    float k = v1->y - r.origin.y;
+    float l = v1->z - r.origin.z;
+
+    float ak_minus_jb = a * k - j * b;
+    float jc_minus_al = j * c - a * l;
+    float bl_minus_kc = b * l - k * c;
+    float ei_minus_hf = e * i - h * f;
+    float gf_minus_di = g * f - d * i;
+    float dh_minus_eg = d * h - e * g;
+
+    float M = a * ei_minus_hf + b * gf_minus_di + c * dh_minus_eg;
+
+    if(M == 0){
+        return false;
+    }
+
+    float t = - (f * ak_minus_jb + e * jc_minus_al + d * bl_minus_kc) / M;
+    if(t < t0 || t > t1)
+        return false;
+
+    float gamma = (i * ak_minus_jb + h * jc_minus_al + g * bl_minus_kc) / M;
+    if(gamma < 0 || gamma > 1)
+        return false;
+
+    float beta = (j * ei_minus_hf + k * gf_minus_di + l * dh_minus_eg) / M;
+    if(beta < 0 || beta > (1 - gamma))
+        return false;
+
+
+    //fill HR
+    vec3d intersect_coord = r.origin + t * r.dir;
+    rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t);
+
+    return true;
+};

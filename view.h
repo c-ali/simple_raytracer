@@ -15,7 +15,7 @@ private:
     mesh msh;
     float viewing_dst;
     std::vector<vec3d> light_srcs;
-    bool shadows = true;
+    bool shadows = false;
     std::vector<float> light_intensites;
 
     vec3d u = vec3d(1,0,0); //right

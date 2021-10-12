@@ -44,7 +44,7 @@ QRgb shader::shade(hit_record &hr, std::vector<bool> in_shadow){
         vec3d light_incidence = light_srcs[i] - *hr.get_sect_coords();
         light_incidence = light_incidence.normalized();
 
-        //apply lambertiean shading if is not in shadow
+        //apply shading if is not in shadow
         if(!in_shadow[i]){
             apply_shading(normal, light_incidence, *hr.get_sect_coords(), i);
         }

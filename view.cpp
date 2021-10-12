@@ -7,7 +7,8 @@ view::view(int width, int height, vec3d viewer_pos, vec3d viewing_dir, mesh msh,
     img_width(width), img_height(height), viewer_pos(viewer_pos), w(viewing_dir), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs), light_intensites(light_intensites){}
 
 QImage view::render(){
-    phong_shader s = phong_shader(light_srcs, viewer_pos, light_intensites);
+    //phong_shader s = phong_shader(light_srcs, viewer_pos, light_intensites);
+    lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
     vec3d ray_direction, ray_origin;
     QImage img(img_width, img_height, QImage::Format_RGB16);
     //loop over pixels
@@ -39,7 +40,7 @@ QImage view::render(){
             hit_record sr = hit_record(); //shadow record
 
             //check if ray hits any objec
-            if(msh.hit(light_ray, 0, max_dist, hr)){
+            if(msh.hit(light_ray, eps, max_dist, hr)){
                 vec3d const *sect_pt = hr.get_sect_coords();
                 if(shadows){
                     std::vector<bool> in_shadow;

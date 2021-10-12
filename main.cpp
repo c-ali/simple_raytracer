@@ -35,16 +35,16 @@ QImage test_scene(){
 }
 
 QImage view_mesh(){
-    int width = 500;
-    int height = 500;
-    float viewing_dst = 2;
+    int width = 1000;
+    int height = 1000;
+    float viewing_dst = 7;
     //vec3d light_src = vec3d(3,8,-5);
     std::vector<vec3d> light_srcs;
     vec3d l1 = vec3d(10,0,10);
     vec3d l2 = vec3d(0,0,10);
-    std::vector<float> light_intensities {2,2};
-    vec3d viewer_pos = vec3d(0,2,10);
-    vec3d w = vec3d(0,0,1);
+    std::vector<float> light_intensities {0.5,1};
+    vec3d viewer_pos = vec3d(0,3,15);
+    vec3d w = vec3d(0,0.2,1);
     light_srcs.push_back(l1);
 
     mesh msh = mesh();

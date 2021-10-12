@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <memory>
 #include <QRgb>
+#include <limits>
 
 class vec3d {
 public:
@@ -44,14 +45,15 @@ private:
     vec3d normal;
     vec3d sect_coords;
     QRgb surface_color;
+    float t = std::numeric_limits<float>::max();
 public:
-    void set_normal(vec3d normal);
     vec3d* get_normal();
-    void set_sect_coords(vec3d sect_coords);
     vec3d*  get_sect_coords();
-    void set_surface_color(QRgb color);
     QRgb*  get_surface_color();
+    void reset();
     hit_record();
+    float get_dist();
+    void register_hit(vec3d normal, vec3d sect_coords, QRgb surface_color, float t);
 };
 
 class ray {

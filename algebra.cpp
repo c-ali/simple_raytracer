@@ -70,14 +70,23 @@ ray::ray(vec3d origin,vec3d dir) : origin(origin), dir(dir){};
 //getter and setter for hit_record
 hit_record::hit_record(){};
 
-void hit_record::set_normal(vec3d n){normal = n;};
+void hit_record::register_hit(vec3d normal, vec3d sect_coords, QRgb surface_color, float t){
+    this->normal = normal;
+    this->sect_coords = sect_coords;
+    this->surface_color = surface_color;
+    this->t = t;
+}
 
-void hit_record::set_sect_coords(vec3d s){sect_coords = s;};
-
-void hit_record::set_surface_color(QRgb color){surface_color = color;};
+void hit_record::reset(){
+    t = std::numeric_limits<float>::max();
+}
 
 vec3d*  hit_record::get_normal(){return &normal;};
+
 vec3d*  hit_record::get_sect_coords(){return &sect_coords;};
+
 QRgb*  hit_record::get_surface_color(){return &surface_color;};
+
+float hit_record::get_dist(){return t;};
 
 
