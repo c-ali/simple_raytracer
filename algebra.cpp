@@ -55,9 +55,14 @@ vec3d cross(vec3d first, vec3d second){
     return res;
 }
 
-vec2d::vec2d(float x, float y) : x(x), y(y){};
 
-
+float vec3d::operator[](size_t idx){
+    switch(idx){
+    case 0: return x;
+    case 1: return y;
+    case 2: return z;
+    }
+}
 
 box::box(vec3d min, vec3d max) : min(min), max(max){};
 

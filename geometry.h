@@ -37,12 +37,12 @@ public:
 
 class mesh {
 private:
-   std::vector<std::shared_ptr<surface>> faces;
    std::vector<vec3d> vertices, normals;
    vec3d get_normal(int idx);
    vec3d get_vertex(int idx);
 public:
     int size();
+    std::vector<std::shared_ptr<surface>> faces;
     void add_surface(std::shared_ptr<surface> new_surface);
     mesh();
     std::shared_ptr<surface> operator[](size_t idx);

@@ -150,16 +150,16 @@ bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
 };
 
 box sphere::bounding_box(){
-    vec3d min = center - vec3d(radius, radius, radius);
-    vec3d max = center + vec3d(radius, radius, radius);
-    return box(min, max);
+        vec3d min = center - vec3d(radius, radius, radius);
+        vec3d max = center + vec3d(radius, radius, radius);
+        return box(min, max);
 };
 
 
 
 box triangle::bounding_box(){
-    //TODO
-    return box(vec3d(), vec3d());
+    return box(vec3d(std::min({v1.x, v2.x, v3.x}), std::min({v1.y, v2.y, v3.y}), std::min({v1.z, v2.z, v3.z})),
+               vec3d(std::max({v1.x, v2.x, v3.x}), std::max({v1.y, v2.y, v3.y}), std::max({v1.z, v2.z, v3.z})));
 };
 
 triangle::triangle(vec3d v1, vec3d v2, vec3d v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}

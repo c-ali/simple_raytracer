@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++17
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     algebra.cpp \
     geometry.cpp \
+    kd_tree.cpp \
     main.cpp \
     shading.cpp \
     view.cpp
@@ -18,6 +19,7 @@ SOURCES += \
 HEADERS += \
     algebra.h \
     geometry.h \
+    kd_tree.h \
     shading.h \
     view.h
 

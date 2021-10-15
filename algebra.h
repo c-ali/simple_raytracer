@@ -15,6 +15,7 @@ public:
     vec3d operator-();
     float norm() const; //returns norm
     vec3d normalized() const; //returns normalized vector
+    float operator[](size_t idx);
 };
 
 vec3d operator-(vec3d first, vec3d second);
@@ -25,18 +26,11 @@ float operator*(vec3d first, vec3d second); //scalar product
 vec3d operator/(vec3d vec, float scalar);
 vec3d cross(vec3d first, vec3d second);
 
-class vec2d {
-private:
-    float x, y;
-public:
-    vec2d(float x, float y);
-};
 
 class box {
-private:
+public:
     vec3d min;
     vec3d max;
-public:
     box(vec3d min, vec3d max);
 };
 
