@@ -4,11 +4,20 @@
 #include <iostream>
 #include <sstream>
 #include "geometry.h"
+#include "data_structures.h"
 
 using std::make_shared;
 
 bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
+    if(tree == NULL)
+        return mesh::hit_without_tree(r, t0, t1, rec);
+    else
+        return mesh::hit_with_tree(tree, r, t0, t1, rec);
+}
+
+bool mesh::hit_without_tree(ray r, float t0, float t1, hit_record &rec){
     bool hit = false;
+
     float t = t1;
 
     for(size_t i = 0; i < faces.size(); ++i){
@@ -20,6 +29,69 @@ bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
     return hit;
 }
 
+bool mesh::hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t1, hit_record &rec){
+    bool hit = false;
+    float t = t1;
+
+    if(node->node_objs.size() > 0){
+
+        for(size_t i = 0; i < faces.size(); ++i){
+            if(faces.at(i)->hit(r, t0, t, rec)){
+                hit = true;
+                t = rec.get_dist();
+            }
+        }
+        return hit;
+    }
+    else{
+        unsigned split_dim = node->split_dim;
+
+        //if(node->lower != NULL && intersects(node->lower_split_bbox, r)){
+        if(node->lower){
+            if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
+                hit = true;
+                t = rec.get_dist();
+            }
+        }
+        //if(node->upper != NULL && intersects(node->upper_split_bbox, r))
+        if(node->upper)
+            hit = hit || mesh::hit_with_tree(node->upper, r, t0, t, rec);
+
+    }
+  return hit;
+}
+/*
+bool mesh::hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t1, hit_record &rec){
+    //hit fct with kd tree
+    bool hit = false;
+
+    //if we hit a child, iterate over the nodes
+    float t = t1;
+
+
+    //else recurse
+    unsigned split_dim = node->split_dim;
+    float t_hit = (node->split_plane - r.origin[split_dim]) / r.dir[split_dim];
+
+    if(node->upper != NULL){
+        if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
+            hit = true;
+            t = rec.get_dist();
+        }
+    }
+    if(node->lower != NULL)
+        hit = hit || mesh::hit_with_tree(node->upper, r, t0, t, rec);
+
+    for(size_t i = 0; i < node->node_objs.size(); ++i){
+        if(faces.at(i)->hit(r, t0, t, rec)){
+            hit = true;
+            t = rec.get_dist();
+        }
+    }
+
+    return hit;
+}
+*/
 mesh::mesh(){}
 
 void mesh::add_surface(std::shared_ptr<surface> new_surface){
@@ -54,14 +126,14 @@ void mesh::read_obj(const char* path){
         std::istringstream content(line.substr(2));
         //check for vertices
         if(line.substr(0,2) == "v "){
-            vec3d v;
+            vec3f v;
             content>>v.x; content>>v.y; content>>v.z;
             vertices.push_back(v);
         }
 
         //check for normals
         if(line.substr(0,2) == "vn"){
-            vec3d n;
+            vec3f n;
             content>>n.x; content>>n.y; content>>n.z;
             normals.push_back(n);
             normals_present = true;
@@ -83,12 +155,12 @@ void mesh::read_obj(const char* path){
                 }
                 if(idxs.size() > 6)
                     //case has textures, ignore for now
-                    faces.push_back(make_shared<triangle>(vec3d(get_vertex(idxs[0])), vec3d(get_vertex(idxs[3])), vec3d(get_vertex(idxs[6])),
-                                                          vec3d(get_normal(idxs[2])), vec3d(get_normal(idxs[5])), vec3d(get_normal(idxs[8]))));
+                    faces.push_back(make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[3])), vec3f(get_vertex(idxs[6])),
+                                                          vec3f(get_normal(idxs[2])), vec3f(get_normal(idxs[5])), vec3f(get_normal(idxs[8]))));
                 else
                     //case has no textures but normals
-                    faces.push_back(make_shared<triangle>(vec3d(get_vertex(idxs[0])), vec3d(get_vertex(idxs[2])), vec3d(get_vertex(idxs[4])),
-                                                      vec3d(get_normal(idxs[1])), vec3d(get_normal(idxs[3])), vec3d(get_normal(idxs[5]))));
+                    faces.push_back(make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[2])), vec3f(get_vertex(idxs[4])),
+                                                      vec3f(get_normal(idxs[1])), vec3f(get_normal(idxs[3])), vec3f(get_normal(idxs[5]))));
             }
             else{
                 //case has only vertices
@@ -99,28 +171,32 @@ void mesh::read_obj(const char* path){
                     idxs.push_back(v_idx);
                 }
 
-                faces.push_back(make_shared<triangle>(vec3d(get_vertex(idxs[0])), vec3d(get_vertex(idxs[1])), vec3d(get_vertex(idxs[2]))));
+                faces.push_back(make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[1])), vec3f(get_vertex(idxs[2]))));
             }
         }
     }
 }
 
+void mesh::build_tree(int min_node_size, int max_depth){
+    tree = std::make_shared<kd_tree>(faces, 0, min_node_size, max_depth);
+}
+
 //since objs are 1-indexed, we write a getter-function
-vec3d mesh::get_vertex(int idx){
+vec3f mesh::get_vertex(int idx){
     return vertices.at(idx-1);
 }
 
 //since objs are 1-indexed, we write a getter-function
-vec3d mesh::get_normal(int idx){
+vec3f mesh::get_normal(int idx){
     return normals.at(idx-1);
 }
 
 
-sphere::sphere(vec3d center, float radius) : center(center), radius(radius){};
+sphere::sphere(vec3f center, float radius) : center(center), radius(radius){};
 
-vec3d sphere::get_normal(vec3d sec_pt){
+vec3f sphere::get_normal(vec3f sec_pt){
     //unit normal to the surface
-    vec3d res = sec_pt - center;
+    vec3f res = sec_pt - center;
     return res;
 }
 
@@ -140,7 +216,7 @@ bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
         if(t0 < t_intersect && t_intersect < t1){
             //fill hit record and report hit
             //get section coordinate, normal and color
-            vec3d intersect_coord = r.origin + t_intersect * r.dir;
+            vec3f intersect_coord = r.origin + t_intersect * r.dir;
             rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t_intersect);
 
             return true;
@@ -150,21 +226,30 @@ bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
 };
 
 box sphere::bounding_box(){
-        vec3d min = center - vec3d(radius, radius, radius);
-        vec3d max = center + vec3d(radius, radius, radius);
+        vec3f min = center - vec3f(radius, radius, radius);
+        vec3f max = center + vec3f(radius, radius, radius);
         return box(min, max);
 };
 
 
 
 box triangle::bounding_box(){
-    return box(vec3d(std::min({v1.x, v2.x, v3.x}), std::min({v1.y, v2.y, v3.y}), std::min({v1.z, v2.z, v3.z})),
-               vec3d(std::max({v1.x, v2.x, v3.x}), std::max({v1.y, v2.y, v3.y}), std::max({v1.z, v2.z, v3.z})));
+    return box(vec3f(std::min({v1.x, v2.x, v3.x}), std::min({v1.y, v2.y, v3.y}), std::min({v1.z, v2.z, v3.z})),
+               vec3f(std::max({v1.x, v2.x, v3.x}), std::max({v1.y, v2.y, v3.y}), std::max({v1.z, v2.z, v3.z})));
 };
 
-triangle::triangle(vec3d v1, vec3d v2, vec3d v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
 
-triangle::triangle(vec3d v1, vec3d v2, vec3d v3, vec3d n1, vec3d n2, vec3d n3)
+vec3f triangle::centroid(){
+    return (v1+v2+v3)/3;
+}
+
+vec3f sphere::centroid(){
+    return center;
+}
+
+triangle::triangle(vec3f v1, vec3f v2, vec3f v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
+
+triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, vec3f n2, vec3f n3)
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
 
 bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
@@ -209,10 +294,10 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
 
 
     //compute intersection
-    vec3d intersect_coord = r.origin + t * r.dir;
+    vec3f intersect_coord = r.origin + t * r.dir;
 
     //compute normals
-    vec3d normal;
+    vec3f normal;
     if(has_normals){
         normal = (n1 + n2 + n3);
         if(interpolate_normals){

@@ -3,13 +3,13 @@
 #include "algebra.h"
 #include "shading.h"
 
-view::view(int width, int height, vec3d viewer_pos, vec3d viewing_dir, mesh msh, float viewing_dst, std::vector<vec3d> light_srcs, std::vector<float> light_intensites) :
+view::view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh, float viewing_dst, std::vector<vec3f> light_srcs, std::vector<float> light_intensites) :
     img_width(width), img_height(height), viewer_pos(viewer_pos), w(viewing_dir), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs), light_intensites(light_intensites){}
 
 QImage view::render(){
-    phong_shader s = phong_shader(light_srcs, viewer_pos, light_intensites);
-    //lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
-    vec3d ray_direction, ray_origin;
+    //phong_shader s = phong_shader(light_srcs, viewer_pos, light_intensites);
+    lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
+    vec3f ray_direction, ray_origin;
     QImage img(img_width, img_height, QImage::Format_RGB16);
     //loop over pixels
     for(int i = 0; i < img_height; ++i){
@@ -41,12 +41,12 @@ QImage view::render(){
 
             //check if ray hits any objec
             if(msh.hit(light_ray, eps, max_dist, hr)){
-                vec3d const *sect_pt = hr.get_sect_coords();
+                vec3f const *sect_pt = hr.get_sect_coords();
                 if(shadows){
                     std::vector<bool> in_shadow;
                     //check for shadow by each light source
                     for(size_t k = 0; k < light_srcs.size(); ++k){
-                        vec3d ray_dir = light_srcs[k] - *sect_pt;
+                        vec3f ray_dir = light_srcs[k] - *sect_pt;
                         ray shadow_ray = ray(*sect_pt, ray_dir);
                         in_shadow.push_back(msh.hit(shadow_ray, eps, max_dist, sr));
                     }

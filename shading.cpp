@@ -3,7 +3,7 @@
 #include <math.h>
 #include "shading.h"
 
-shader::shader(std::vector<vec3d> light_srcs,vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : light_srcs(light_srcs), viewer_pos(viewer_pos), light_intensites(light_intensites), ambient_intensity(ambient_intensity){
+shader::shader(std::vector<vec3f> light_srcs,vec3f viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : light_srcs(light_srcs), viewer_pos(viewer_pos), light_intensites(light_intensites), ambient_intensity(ambient_intensity){
     initialize();
 };
 
@@ -37,11 +37,11 @@ QRgb shader::shade(hit_record &hr, std::vector<bool> in_shadow){
     add_ambient();
 
     //get and normalize normal vector
-    vec3d normal = hr.get_normal()->normalized();
+    vec3f normal = hr.get_normal()->normalized();
 
     for(size_t i = 0; i < light_srcs.size(); ++i){
         //compute and normalize light incidence vector
-        vec3d light_incidence = light_srcs[i] - *hr.get_sect_coords();
+        vec3f light_incidence = light_srcs[i] - *hr.get_sect_coords();
         light_incidence = light_incidence.normalized();
 
         //apply shading if is not in shadow
@@ -56,7 +56,7 @@ QRgb shader::shade(hit_record &hr, std::vector<bool> in_shadow){
     return qRgb(ored, ogreen, oblue);
 }
 
-void lamb_shader::apply_shading(vec3d normal, vec3d light_incidence, vec3d sect_coords, int light_src_idx){
+void lamb_shader::apply_shading(vec3f normal, vec3f light_incidence, vec3f sect_coords, int light_src_idx){
     //uses lambertial model for shading
     float dot = std::max((float) 0, normal * light_incidence);
     ored += sred * light_intensites[light_src_idx] * dot;
@@ -64,12 +64,12 @@ void lamb_shader::apply_shading(vec3d normal, vec3d light_incidence, vec3d sect_
     ogreen += sgreen * light_intensites[light_src_idx] * dot;
 }
 
-lamb_shader::lamb_shader(std::vector<vec3d> light_srcs, vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : shader(light_srcs, viewer_pos, light_intensites, ambient_intensity){};
+lamb_shader::lamb_shader(std::vector<vec3f> light_srcs, vec3f viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : shader(light_srcs, viewer_pos, light_intensites, ambient_intensity){};
 
-phong_shader::phong_shader(std::vector<vec3d> light_srcs, vec3d viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : shader(light_srcs, viewer_pos, light_intensites, ambient_intensity){};
+phong_shader::phong_shader(std::vector<vec3f> light_srcs, vec3f viewer_pos, std::vector<float> light_intensites, float ambient_intensity) : shader(light_srcs, viewer_pos, light_intensites, ambient_intensity){};
 
-void phong_shader::apply_shading(vec3d normal, vec3d light_incidence, vec3d sect_coords, int light_src_idx){
-    vec3d h = viewer_pos - sect_coords;
+void phong_shader::apply_shading(vec3f normal, vec3f light_incidence, vec3f sect_coords, int light_src_idx){
+    vec3f h = viewer_pos - sect_coords;
     h = h.normalized();
     h = light_incidence + h;
     h = h.normalized();

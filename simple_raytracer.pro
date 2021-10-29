@@ -10,16 +10,16 @@ CONFIG += c++17
 
 SOURCES += \
     algebra.cpp \
+    data_structures.cpp \
     geometry.cpp \
-    kd_tree.cpp \
     main.cpp \
     shading.cpp \
     view.cpp
 
 HEADERS += \
     algebra.h \
+    data_structures.h \
     geometry.h \
-    kd_tree.h \
     shading.h \
     view.h
 

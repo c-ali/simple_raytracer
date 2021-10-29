@@ -3,47 +3,59 @@
 
 #include "algebra.h"
 
+class kd_tree;
+
 class surface {
 public:
     virtual bool hit(ray r, float t0, float t1, hit_record &rec) = 0;
     virtual box bounding_box() = 0;
+    virtual vec3f centroid() = 0;
 };
 
 class sphere : public surface {
 private:
-    vec3d center;
+    vec3f center;
     float radius;
-    vec3d get_normal(vec3d sec_pt);
+    vec3f get_normal(vec3f sec_pt);
     QRgb color = qRgb(0,255,0);
 public:
-    sphere(vec3d center, float radius);
+    sphere(vec3f center, float radius);
     box bounding_box() override;
+    virtual vec3f centroid() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;
 };
 
 class triangle : public surface {
 private:
     QRgb color = qRgb(0,255,0);
-    vec3d v1, v2, v3;
-    vec3d n1, n2, n3;
+    vec3f v1, v2, v3;
+    vec3f n1, n2, n3;
     bool has_normals;
     bool interpolate_normals = true;
 public:
-    triangle(vec3d v1,vec3d v2,vec3d v3,vec3d n1,vec3d n2,vec3d n3);
-    triangle(vec3d v1,vec3d v2,vec3d v3);
+    triangle(vec3f v1,vec3f v2,vec3f v3,vec3f n1,vec3f n2,vec3f n3);
+    triangle(vec3f v1,vec3f v2,vec3f v3);
     box bounding_box() override;
+    virtual vec3f centroid() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;
 };
 
+class kd_tree;
+
 class mesh {
 private:
-   std::vector<vec3d> vertices, normals;
-   vec3d get_normal(int idx);
-   vec3d get_vertex(int idx);
+   std::vector<vec3f> vertices, normals;
+   std::shared_ptr<kd_tree> tree = NULL;
+   vec3f get_normal(int idx);
+   vec3f get_vertex(int idx);
+   bool hit_without_tree(ray r, float t0, float t1, hit_record &rec);
+   bool hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t1, hit_record &rec);
+
 public:
     int size();
     std::vector<std::shared_ptr<surface>> faces;
     void add_surface(std::shared_ptr<surface> new_surface);
+    void build_tree(int min_node_size, int max_depth);
     mesh();
     std::shared_ptr<surface> operator[](size_t idx);
     bool hit(ray r, float t0, float t1, hit_record &rec);
