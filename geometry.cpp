@@ -46,15 +46,15 @@ bool mesh::hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t
     else{
         unsigned split_dim = node->split_dim;
 
-        //if(node->lower != NULL && intersects(node->lower_split_bbox, r)){
-        if(node->lower){
+        if(node->lower != NULL && intersects(node->lower_split_bbox, r)){
+        //if(node->lower){
             if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
                 hit = true;
                 t = rec.get_dist();
             }
         }
-        //if(node->upper != NULL && intersects(node->upper_split_bbox, r))
-        if(node->upper)
+        if(node->upper != NULL && intersects(node->upper_split_bbox, r))
+        //if(node->upper)
             hit = hit || mesh::hit_with_tree(node->upper, r, t0, t, rec);
 
     }

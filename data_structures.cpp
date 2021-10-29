@@ -19,11 +19,14 @@ kd_tree::kd_tree(std::vector<std::shared_ptr<surface>> &objs, unsigned depth, si
         for(size_t i = 0; i < num_obj; ++i){
             bool sort_into_upper = true;
             bool sort_into_lower = true;
-            if(objs[i]->bounding_box().max[split_dim] < split_plane){
-                sort_into_upper = false;
+            if(objs[i]->centroid()[split_dim] > split_plane){
+                upper_list.push_back(objs.at(i));
+                upper_split_bbox = box_union(upper_split_bbox, objs.at(i)->bounding_box());
             }
-            if(objs[i]->bounding_box().min[split_dim] > split_plane){
-                sort_into_lower = false;
+            else{
+                lower_list.push_back(objs.at(i));
+                lower_split_bbox = box_union(lower_split_bbox, objs.at(i)->bounding_box());
+                //upper_split_lbound = std::max(upper_split_lbound, objs[i]->bounding_box().max[split_dim]);            }
             }
             if(!(sort_into_lower || sort_into_upper))
                 std::cout<<"test"<<std::endl;
@@ -33,16 +36,7 @@ kd_tree::kd_tree(std::vector<std::shared_ptr<surface>> &objs, unsigned depth, si
             upper_split_bbox = box();
             lower_split_bbox = box();
 
-            if(sort_into_upper){
-                upper_list.push_back(objs.at(i));
-                upper_split_bbox = box_union(upper_split_bbox, objs.at(i)->bounding_box());
-                //lower_split_ubound = std::min(lower_split_ubound, objs[i]->bounding_box().min[split_dim]);
-            }
-            if(sort_into_lower){
-                lower_list.push_back(objs.at(i));
-                lower_split_bbox = box_union(lower_split_bbox, objs.at(i)->bounding_box());
-                //upper_split_lbound = std::max(upper_split_lbound, objs[i]->bounding_box().max[split_dim]);
-            }
+
         }
         if(upper_list.size() == 0 || lower_list.size() == 0){
             node_objs = objs;
