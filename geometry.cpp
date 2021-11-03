@@ -33,65 +33,32 @@ bool mesh::hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t
     bool hit = false;
     float t = t1;
 
-    if(node->node_objs.size() > 0){
-
-        for(size_t i = 0; i < faces.size(); ++i){
-            if(faces.at(i)->hit(r, t0, t, rec)){
-                hit = true;
-                t = rec.get_dist();
-            }
+    //if node is a leaf node
+    for(size_t i = 0; i < node->node_objs.size(); ++i){
+        if(node->node_objs.at(i)->hit(r, t0, t, rec)){
+            hit = true;
+            t = rec.get_dist();
         }
-        return hit;
     }
-    else{
-        unsigned split_dim = node->split_dim;
-
-        if(node->lower != NULL && intersects(node->lower_split_bbox, r)){
-        //if(node->lower){
-            if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
-                hit = true;
-                t = rec.get_dist();
-            }
-        }
-        if(node->upper != NULL && intersects(node->upper_split_bbox, r))
-        //if(node->upper)
-            hit = hit || mesh::hit_with_tree(node->upper, r, t0, t, rec);
-
-    }
-  return hit;
-}
-/*
-bool mesh::hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t1, hit_record &rec){
-    //hit fct with kd tree
-    bool hit = false;
-
-    //if we hit a child, iterate over the nodes
-    float t = t1;
 
 
     //else recurse
-    unsigned split_dim = node->split_dim;
-    float t_hit = (node->split_plane - r.origin[split_dim]) / r.dir[split_dim];
-
-    if(node->upper != NULL){
+    //if(node->lower != NULL && intersects(node->lower_split_bbox, r)){
+    if(node->lower){
         if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
             hit = true;
             t = rec.get_dist();
         }
     }
-    if(node->lower != NULL)
+
+    //if(node->upper != NULL && intersects(node->upper_split_bbox, r))
+    if(node->upper)
         hit = hit || mesh::hit_with_tree(node->upper, r, t0, t, rec);
 
-    for(size_t i = 0; i < node->node_objs.size(); ++i){
-        if(faces.at(i)->hit(r, t0, t, rec)){
-            hit = true;
-            t = rec.get_dist();
-        }
-    }
 
-    return hit;
+  return hit;
 }
-*/
+
 mesh::mesh(){}
 
 void mesh::add_surface(std::shared_ptr<surface> new_surface){

@@ -46,7 +46,7 @@ public:
 
 box box_union(const box &first, const box &second);
 bool contains(const box &b, const vec3f &pt);
-bool intersects(const box &b, const ray &r);
+bool intersects(const box &b,const ray &r);
 
 class hit_record {
 private:
@@ -64,7 +64,6 @@ public:
     void register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t);
 };
 
-;
 
 
 #endif // ALGEBRA_H

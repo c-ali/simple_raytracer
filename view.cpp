@@ -14,7 +14,6 @@ QImage view::render(){
     //loop over pixels
     for(int i = 0; i < img_height; ++i){
         //progress
-        //std::cout << "Computing ray " + std::to_string(i*img_height) + " / " + std::to_string(img_width*img_height) << std::endl;
         for(int j = 0; j < img_width; ++j){
             //compute pixel coordinates
             float u_offset = -1 + 2 * (i + 0.5) / img_width;

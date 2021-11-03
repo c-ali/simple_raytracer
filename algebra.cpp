@@ -102,11 +102,11 @@ bool intersects(const box &b, const ray &r){
     float t_max_z = (b.max.z - r.origin.z) / r.dir.z;
     if(t_min_z > t_max_z) std::swap(t_min_z, t_max_z);
 
-    if(t_min_y > t_min_x)
-        t_min_x = t_min_y;
+    if (t_min_z > t_min_x)
+         t_min_x = t_min_z;
 
-    if(t_max_y > t_max_x)
-        t_max_x = t_max_y;
+     if (t_max_z < t_max_x)
+         t_max_x = t_max_z;
 
     if((t_min_x > t_max_z) || (t_min_z > t_max_x))
         return false;
@@ -122,10 +122,12 @@ ray::ray(vec3f origin,vec3f dir) : origin(origin), dir(dir){};
 hit_record::hit_record(){};
 
 void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t){
-    this->normal = normal;
-    this->sect_coords = sect_coords;
-    this->surface_color = surface_color;
-    this->t = t;
+    if(t < this->t){
+        this->normal = normal;
+        this->sect_coords = sect_coords;
+        this->surface_color = surface_color;
+        this->t = t;
+    }
 }
 
 void hit_record::reset(){

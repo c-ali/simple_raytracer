@@ -49,7 +49,7 @@ QImage view_mesh(){
 
     mesh msh = mesh();
     msh.read_obj("sphere.obj");
-    msh.build_tree(2, 6);
+    msh.build_tree(2, 2);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, light_srcs, light_intensities);
     QImage img = v.render();
     return img;
