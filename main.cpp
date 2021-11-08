@@ -35,21 +35,25 @@ QImage test_scene(){
 }
 
 QImage view_mesh(){
-    int width = 1000;
-    int height = 1000;
+    int width = 500;
+    int height = 500;
     float viewing_dst = 7;
     //vec3d light_src = vec3d(3,8,-5);
     std::vector<vec3f> light_srcs;
     vec3f l1 = vec3f(10,0,10);
-    vec3f l2 = vec3f(0,0,10);
-    std::vector<float> light_intensities {0.5,1};
-    vec3f viewer_pos = vec3f(0,3,15);
+    vec3f l2 = vec3f(-10,0,10);
+    std::vector<float> light_intensities {0.5,0.3};
+    vec3f viewer_pos = vec3f(0,5,20);
     vec3f w = vec3f(0,0.2,1);
     light_srcs.push_back(l1);
+    light_srcs.push_back(l2);
 
     mesh msh = mesh();
-    msh.read_obj("sphere.obj");
-    msh.build_tree(2, 2);
+    msh.read_obj("bunny.obj");
+    std::shared_ptr<surface> wall = std::make_shared<triangle>(vec3f(300,300,-3), vec3f(-300,300,-3), vec3f(0,-300,-3));
+    wall->set_color(qRgb(255,255,255));
+    msh.add_surface(wall);
+    msh.build_tree(2, 50);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, light_srcs, light_intensities);
     QImage img = v.render();
     return img;

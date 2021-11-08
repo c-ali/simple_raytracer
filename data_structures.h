@@ -9,7 +9,7 @@
 class kd_tree
 {
 public:
-    float upper_split_lbound, lower_split_ubound, split_plane;
+    float split_plane;
     box upper_split_bbox, lower_split_bbox;
     unsigned split_dim;
     std::shared_ptr<kd_tree> upper, lower;

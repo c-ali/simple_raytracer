@@ -6,10 +6,13 @@
 class kd_tree;
 
 class surface {
+protected:
+    QRgb color = qRgb(0,255,0);
 public:
     virtual bool hit(ray r, float t0, float t1, hit_record &rec) = 0;
     virtual box bounding_box() = 0;
     virtual vec3f centroid() = 0;
+    void set_color(QRgb color);
 };
 
 class sphere : public surface {
@@ -27,7 +30,6 @@ public:
 
 class triangle : public surface {
 private:
-    QRgb color = qRgb(0,255,0);
     vec3f v1, v2, v3;
     vec3f n1, n2, n3;
     bool has_normals;

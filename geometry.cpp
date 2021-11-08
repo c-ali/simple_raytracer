@@ -42,18 +42,25 @@ bool mesh::hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t
     }
 
 
-    //else recurse
-    //if(node->lower != NULL && intersects(node->lower_split_bbox, r)){
-    if(node->lower){
+    if(node->upper != NULL && intersects(node->lower_split_bbox, r)){
+        //if(node->lower != NULL){
         if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
             hit = true;
             t = rec.get_dist();
         }
     }
 
-    //if(node->upper != NULL && intersects(node->upper_split_bbox, r))
-    if(node->upper)
-        hit = hit || mesh::hit_with_tree(node->upper, r, t0, t, rec);
+    //else recurse
+    if(node->lower != NULL && intersects(node->upper_split_bbox, r)){
+    //if(node->upper != NULL){
+        if(mesh::hit_with_tree(node->upper, r, t0, t, rec)){
+            hit = true;
+            t = rec.get_dist();
+        }
+    }
+
+
+        //hit = hit || mesh::hit_with_tree(node->lower, r, t0, t, rec);
 
 
   return hit;
@@ -218,6 +225,8 @@ triangle::triangle(vec3f v1, vec3f v2, vec3f v3) : v1(v1), v2(v2), v3(v3), has_n
 
 triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, vec3f n2, vec3f n3)
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
+
+void surface::set_color(QRgb color){this->color = color;};
 
 bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
     //solve linear system
