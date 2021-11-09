@@ -14,6 +14,7 @@ SOURCES += \
     geometry.cpp \
     main.cpp \
     shading.cpp \
+    util.cpp \
     view.cpp
 
 HEADERS += \
@@ -21,6 +22,7 @@ HEADERS += \
     data_structures.h \
     geometry.h \
     shading.h \
+    util.h \
     view.h
 
 FORMS +=

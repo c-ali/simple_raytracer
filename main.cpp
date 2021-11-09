@@ -18,7 +18,7 @@ QImage test_scene(){
     vec3f viewer_pos = vec3f(0,0,5);
 
     mesh msh = mesh();
-    std::shared_ptr<surface> sph = std::make_shared<sphere>(vec3f(2,0,0), 0.3);
+    std::shared_ptr<surface> sph = std::make_shared<sphere>(vec3f(2,0,0), 0.8);
     std::shared_ptr<surface> sph_ = std::make_shared<sphere>(vec3f(0,0,-3), 2);
     //std::shared_ptr<surface> tri = std::make_shared<triangle>(vec3d(2,0,0), vec3d(0,0,-3),vec3d(0,1,-10));
     msh.add_surface(sph);
@@ -35,8 +35,8 @@ QImage test_scene(){
 }
 
 QImage view_mesh(){
-    int width = 1000;
-    int height = 1000;
+    int width = 500;
+    int height = 500;
     float viewing_dst = 7;
     //vec3d light_src = vec3d(3,8,-5);
     std::vector<vec3f> light_srcs;

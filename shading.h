@@ -4,6 +4,7 @@
 #include <vector>
 #include <QColor>
 #include "algebra.h"
+#include "util.h"
 
 class shader{
 protected:

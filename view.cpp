@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include "view.h"
 #include "algebra.h"
 #include "shading.h"
@@ -28,8 +28,8 @@ QImage view::render(){
                 //compute pixel coordinates. jitter if necessary
                 if(samples_per_ray > 1){
                     //random number between 0 and 1
-                    float rx = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-                    float ry = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    float rx = 2*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    float ry = 2*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 
                     u_offset = -1 + 2 * (i + 0.5 + rx) / img_width;
                     v_offset = -1 + 2 * (j + 0.5 + ry) / img_height;

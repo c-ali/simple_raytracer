@@ -2,8 +2,14 @@
 #define GEOMETRY_H
 
 #include "algebra.h"
+#include "util.h"
 
-class kd_tree;
+
+class ray {
+public:
+    vec3f origin, dir;
+    ray(vec3f origin,vec3f dir);
+};
 
 class surface {
 protected:
@@ -41,8 +47,6 @@ public:
     virtual vec3f centroid() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;
 };
-
-class kd_tree;
 
 class mesh {
 private:
