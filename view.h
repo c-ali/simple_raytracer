@@ -24,7 +24,7 @@ private:
     float eps = 0.01;
     float max_dist = 1e10;
 
-    int samples_per_ray = 10;
+    int samples_per_ray = 1;
 
     const char MODE = 'p'; // p = perspectivic; o = orthographic
 public:

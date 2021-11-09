@@ -29,9 +29,4 @@ bool operator<(vec3f first, vec3f second);
 bool operator>(vec3f first, vec3f second);
 
 
-
-
-
-
-
 #endif // ALGEBRA_H

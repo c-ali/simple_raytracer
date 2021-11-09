@@ -7,12 +7,10 @@
 hit_record::hit_record(){};
 
 void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t){
-    if(t < this->t){
-        this->normal = normal;
-        this->sect_coords = sect_coords;
-        this->surface_color = surface_color;
-        this->t = t;
-    }
+    this->normal = normal;
+    this->sect_coords = sect_coords;
+    this->surface_color = surface_color;
+    this->t = t;
 }
 
 void hit_record::reset(){
@@ -25,7 +23,7 @@ vec3f*  hit_record::get_sect_coords(){return &sect_coords;};
 
 QRgb*  hit_record::get_surface_color(){return &surface_color;};
 
-float hit_record::get_dist(){return t;};
+float hit_record::get_t(){return t;};
 
 
 box::box() : min(vec3f(1e30f,1e30f,1e30f)), max(vec3f(-1e30f,-1e30f,-1e30f)){};

@@ -4,6 +4,9 @@
 #include "algebra.h"
 #include "util.h"
 
+class kd_tree;
+class basic_kd_tree;
+class fast_kd_tree;
 
 class ray {
 public:
@@ -51,17 +54,20 @@ public:
 class mesh {
 private:
    std::vector<vec3f> vertices, normals;
-   std::shared_ptr<kd_tree> tree = NULL;
+   std::shared_ptr<basic_kd_tree> basic_tree = NULL;
+   std::shared_ptr<fast_kd_tree> fast_tree = NULL;
    vec3f get_normal(int idx);
    vec3f get_vertex(int idx);
    bool hit_without_tree(ray r, float t0, float t1, hit_record &rec);
-   bool hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t1, hit_record &rec);
+   bool hit_with_tree(std::shared_ptr<basic_kd_tree> &node,ray r, float t0, float t1, hit_record &rec);
+   bool hit_with_tree(std::shared_ptr<fast_kd_tree> &node,ray r, float t0, float t1, hit_record &rec);
 
 public:
     int size();
     std::vector<std::shared_ptr<surface>> faces;
     void add_surface(std::shared_ptr<surface> new_surface);
-    void build_tree(int min_node_size, int max_depth);
+    void build_basic_tree(int min_node_size, int max_depth);
+    void build_fast_tree(int min_node_size, int max_depth);
     mesh();
     std::shared_ptr<surface> operator[](size_t idx);
     bool hit(ray r, float t0, float t1, hit_record &rec);

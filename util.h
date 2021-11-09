@@ -3,9 +3,7 @@
 
 #include "algebra.h"
 
-class kd_tree;
 class ray;
-class surface;
 
 class box {
 public:
@@ -33,7 +31,7 @@ public:
     QRgb*  get_surface_color();
     void reset();
     hit_record();
-    float get_dist();
+    float get_t();
     void register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t);
 };
 

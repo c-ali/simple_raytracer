@@ -6,10 +6,11 @@
 #include "geometry.h"
 #include "data_structures.h"
 
-using std::make_shared;
-
+using std::make_shared, std::min, std::max;
 
 ray::ray(vec3f origin,vec3f dir) : origin(origin), dir(dir){};
+
+void surface::set_color(QRgb color){this->color = color;};
 
 sphere::sphere(vec3f center, float radius) : center(center), radius(radius){};
 
@@ -71,7 +72,6 @@ triangle::triangle(vec3f v1, vec3f v2, vec3f v3) : v1(v1), v2(v2), v3(v3), has_n
 triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, vec3f n2, vec3f n3)
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
 
-void surface::set_color(QRgb color){this->color = color;};
 
 bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
     //solve linear system
@@ -136,10 +136,13 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
 
 
 bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
-    if(tree == NULL)
+    if(!(basic_tree || fast_tree))
         return mesh::hit_without_tree(r, t0, t1, rec);
-    else
-        return mesh::hit_with_tree(tree, r, t0, t1, rec);
+    if(fast_tree)
+        return mesh::hit_with_tree(fast_tree, r, t0, t1, rec);
+    if(basic_tree)
+        return mesh::hit_with_tree(basic_tree, r, t0, t1, rec);
+
 }
 
 bool mesh::hit_without_tree(ray r, float t0, float t1, hit_record &rec){
@@ -150,13 +153,13 @@ bool mesh::hit_without_tree(ray r, float t0, float t1, hit_record &rec){
     for(size_t i = 0; i < faces.size(); ++i){
         if(faces.at(i)->hit(r, t0, t, rec)){
             hit = true;
-            t = rec.get_dist();
+            t = rec.get_t();
         }
     }
     return hit;
 }
 
-bool mesh::hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t1, hit_record &rec){
+bool mesh::hit_with_tree(std::shared_ptr<basic_kd_tree> &node,ray r, float t0, float t1, hit_record &rec){
     bool hit = false;
     float t = t1;
 
@@ -164,33 +167,63 @@ bool mesh::hit_with_tree(std::shared_ptr<kd_tree> &node,ray r, float t0, float t
     for(size_t i = 0; i < node->node_objs.size(); ++i){
         if(node->node_objs.at(i)->hit(r, t0, t, rec)){
             hit = true;
-            t = rec.get_dist();
-        }
-    }
-
-
-    if(node->upper != NULL && intersects(node->lower_split_bbox, r)){
-        //if(node->lower != NULL){
-        if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
-            hit = true;
-            t = rec.get_dist();
+            t = rec.get_t();
         }
     }
 
     //else recurse
     if(node->lower != NULL && intersects(node->upper_split_bbox, r)){
-    //if(node->upper != NULL){
         if(mesh::hit_with_tree(node->upper, r, t0, t, rec)){
             hit = true;
-            t = rec.get_dist();
+            t = rec.get_t();
         }
     }
 
-
-        //hit = hit || mesh::hit_with_tree(node->lower, r, t0, t, rec);
-
+    if(node->upper != NULL && intersects(node->lower_split_bbox, r)){
+        if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
+            hit = true;
+            t = rec.get_t();
+        }
+    }
 
   return hit;
+}
+
+bool mesh::hit_with_tree(std::shared_ptr<fast_kd_tree> &node,ray r, float t0, float t1, hit_record &rec){
+        bool hit = false;
+        float t = t1;
+
+        //if node is a leaf node
+        for(size_t i = 0; i < node->node_objs.size(); ++i){
+            if(node->node_objs.at(i)->hit(r, t0, t, rec)){
+                hit = true;
+                t = rec.get_t();
+            }
+        }
+
+        float rayParamPlaneUpper = (node->upper_node_lower_bound - r.origin[node->split_dim]) / r.dir[node->split_dim];
+        float rayParamPlaneLower = (node->lower_node_upper_bound - r.origin[node->split_dim]) / r.dir[node->split_dim];
+
+        // -- case one - node traverses from lower to upper
+        if (r.dir[node->split_dim] >= 0) {
+            if (node->lower && rayParamPlaneLower >= t0) {
+                if (hit_with_tree   (node->lower, r, t0, min(rec.get_t(), min(t1, rayParamPlaneLower)), rec)) hit=true;
+            }
+
+            if (node->upper && rayParamPlaneUpper < t1) {
+                if (hit_with_tree   (node->upper, r, max(t0, rayParamPlaneUpper), min(rec.get_t(), t1), rec)) hit=true;
+            }
+        // -- case two - node traverses from upper to lower
+        } else {
+            if (node->upper && rayParamPlaneUpper >= t0) {
+                if (hit_with_tree   (node->upper, r, t0, min(rec.get_t(), min(t1, rayParamPlaneUpper)), rec)) hit=true;
+            }
+
+            if (node->lower && rayParamPlaneLower < t1) {
+                if (hit_with_tree   (node->lower, r, max(t0, rayParamPlaneLower), min(rec.get_t(), t1), rec)) hit=true;
+            }
+        }
+        return hit;
 }
 
 mesh::mesh(){}
@@ -278,8 +311,12 @@ void mesh::read_obj(const char* path){
     }
 }
 
-void mesh::build_tree(int min_node_size, int max_depth){
-    tree = std::make_shared<kd_tree>(faces, 0, min_node_size, max_depth);
+void mesh::build_basic_tree(int min_node_size, int max_depth){
+    basic_tree = std::make_shared<basic_kd_tree>(faces, 0, min_node_size, max_depth);
+}
+
+void mesh::build_fast_tree(int min_node_size, int max_depth){
+    fast_tree = std::make_shared<fast_kd_tree>(faces, 0, min_node_size, max_depth);
 }
 
 //since objs are 1-indexed, we write a getter-function
