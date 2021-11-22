@@ -6,6 +6,7 @@
 #include <QColor>
 #include "algebra.h"
 #include "geometry.h"
+extern int hit_count;
 
 class view
 {

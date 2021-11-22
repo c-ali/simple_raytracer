@@ -47,7 +47,6 @@ QImage view_mesh(){
     vec3f w = vec3f(0,0.2,1);
     light_srcs.push_back(l1);
     light_srcs.push_back(l2);
-
     mesh msh = mesh();
     msh.read_obj("bunny.obj");
     std::shared_ptr<surface> wall = std::make_shared<triangle>(vec3f(300,300,-3), vec3f(-300,300,-3), vec3f(0,-300,-3));

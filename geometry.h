@@ -7,6 +7,7 @@
 class kd_tree;
 class basic_kd_tree;
 class fast_kd_tree;
+extern int hit_count;
 
 class ray {
 public:
@@ -63,6 +64,8 @@ private:
    bool hit_with_tree(std::shared_ptr<fast_kd_tree> &node,ray r, float t0, float t1, hit_record &rec);
 
 public:
+    box bbox;
+    box bounding_box();
     int size();
     std::vector<std::shared_ptr<surface>> faces;
     void add_surface(std::shared_ptr<surface> new_surface);

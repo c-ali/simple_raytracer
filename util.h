@@ -17,15 +17,15 @@ public:
 box box_union(const box &first, const box &second);
 bool contains(const box &b, const vec3f &pt);
 bool intersects(const box &b,const ray &r);
-
+bool intersectBox(const ray &ray, const box &bb, float &firstHitParam, float &secondHitParam);
 
 class hit_record {
 private:
     vec3f normal;
     vec3f sect_coords;
     QRgb surface_color;
-    float t = std::numeric_limits<float>::max();
 public:
+    float t = std::numeric_limits<float>::max();
     vec3f* get_normal();
     vec3f*  get_sect_coords();
     QRgb*  get_surface_color();

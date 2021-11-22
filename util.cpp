@@ -67,3 +67,157 @@ bool intersects(const box &b, const ray &r){
 
     return true;
 }
+
+
+inline void intersectXPlane(const ray &ray, const float xPlane, float &rayParam, float &yIntersect, float &zIntersect) {
+   rayParam = (xPlane - ray.origin.x) / ray.dir.x;
+   yIntersect = ray.dir.y*rayParam + ray.origin.y;
+   zIntersect = ray.dir.z*rayParam + ray.origin.z;
+}
+inline void intersectYPlane(const ray &ray, const float yPlane, float &rayParam, float &xIntersect, float &zIntersect) {
+   rayParam = (yPlane - ray.origin.y) / ray.dir.y;
+   xIntersect = ray.dir.x*rayParam + ray.origin.x;
+   zIntersect = ray.dir.z*rayParam + ray.origin.z;
+}
+inline void intersectZPlane(const ray &ray, const float zPlane, float &rayParam, float &xIntersect, float &yIntersect) {
+   rayParam = (zPlane - ray.origin.z) / ray.dir.z;
+   xIntersect = ray.dir.x*rayParam + ray.origin.x;
+   yIntersect = ray.dir.y*rayParam + ray.origin.y;
+}
+
+bool intersectBox(const ray &ray, const box &bb, float &firstHitParam, float &secondHitParam) {
+   bool exitFound = false;
+   float hitParam;
+
+
+
+   if (ray.dir.x != 0) {
+      float yIntersect;
+      float zIntersect;
+      if (ray.dir.x > 0) {
+         intersectXPlane(ray, bb.max.x, hitParam, yIntersect, zIntersect);
+      } else {
+         intersectXPlane(ray, bb.min.x, hitParam, yIntersect, zIntersect);
+      }
+      if (yIntersect >= bb.min.y && yIntersect <= bb.max.y
+       && zIntersect >= bb.min.z && zIntersect <= bb.max.z) {
+         secondHitParam = hitParam;
+         exitFound = true;
+      }
+   }
+
+
+
+   if (!exitFound) {
+      float xIntersect;
+      float zIntersect;
+      if (ray.dir.y != 0) {
+         if (ray.dir.y > 0) {
+            intersectYPlane(ray, bb.max.y, hitParam, xIntersect, zIntersect);
+         } else {
+            intersectYPlane(ray, bb.min.y, hitParam, xIntersect, zIntersect);
+         }
+         if (xIntersect >= bb.min.x && xIntersect <= bb.max.x
+          && zIntersect >= bb.min.z && zIntersect <= bb.max.z) {
+            secondHitParam = hitParam;
+            exitFound = true;
+         }
+      }
+   }
+
+
+
+   if (!exitFound) {
+      float xIntersect;
+      float yIntersect;
+      if (ray.dir.z != 0) {
+         if (ray.dir.z > 0) {
+            intersectZPlane(ray, bb.max.z, hitParam, xIntersect, yIntersect);
+         } else {
+            intersectZPlane(ray, bb.min.z, hitParam, xIntersect, yIntersect);
+         }
+         if (xIntersect >= bb.min.x && xIntersect <= bb.max.x
+          && yIntersect >= bb.min.y && yIntersect <= bb.max.y) {
+            secondHitParam = hitParam;
+            exitFound = true;
+         }
+      }
+   }
+
+
+
+   if (!exitFound) {
+      return false;
+   }
+
+
+
+   bool entryFound = false;
+
+
+
+   if (ray.dir.x != 0) {
+      float yIntersect;
+      float zIntersect;
+      if (ray.dir.x > 0) {
+         intersectXPlane(ray, bb.min.x, hitParam, yIntersect, zIntersect);
+      } else {
+         intersectXPlane(ray, bb.max.x, hitParam, yIntersect, zIntersect);
+      }
+      if (yIntersect >= bb.min.y && yIntersect <= bb.max.y
+       && zIntersect >= bb.min.z && zIntersect <= bb.max.z) {
+         firstHitParam = hitParam;
+         entryFound = true;
+      }
+   }
+
+
+
+   if (!entryFound) {
+      float xIntersect;
+      float zIntersect;
+      if (ray.dir.y != 0) {
+         if (ray.dir.y > 0) {
+            intersectYPlane(ray, bb.min.y, hitParam, xIntersect, zIntersect);
+         } else {
+            intersectYPlane(ray, bb.max.y, hitParam, xIntersect, zIntersect);
+         }
+         if (xIntersect >= bb.min.x && xIntersect <= bb.max.x
+          && zIntersect >= bb.min.z && zIntersect <= bb.max.z) {
+            firstHitParam = hitParam;
+            entryFound = true;
+         }
+      }
+   }
+
+
+
+   if (!entryFound) {
+      float xIntersect;
+      float yIntersect;
+      if (ray.dir.z != 0) {
+         if (ray.dir.z > 0) {
+            intersectZPlane(ray, bb.min.z, hitParam, xIntersect, yIntersect);
+         } else {
+            intersectZPlane(ray, bb.max.z, hitParam, xIntersect, yIntersect);
+         }
+         if (xIntersect >= bb.min.x && xIntersect <= bb.max.x
+          && yIntersect >= bb.min.y && yIntersect <= bb.max.y) {
+            firstHitParam = hitParam;
+            entryFound = true;
+         }
+      }
+   }
+
+
+
+   if (!entryFound) {
+      firstHitParam = 0.0f;
+   }
+
+
+
+   return true;
+}
+
+

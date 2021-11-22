@@ -3,7 +3,6 @@
 #include "algebra.h"
 #include "shading.h"
 
-
 view::view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh, float viewing_dst, std::vector<vec3f> light_srcs, std::vector<float> light_intensites) :
     img_width(width), img_height(height), viewer_pos(viewer_pos), w(viewing_dir), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs), light_intensites(light_intensites){
     //initialize random seed
@@ -11,6 +10,7 @@ view::view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh
 }
 
 QImage view::render(){
+    int hit_count = 0;
     phong_shader s = phong_shader(light_srcs, viewer_pos, light_intensites);
     //lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
     vec3f ray_direction, ray_origin;

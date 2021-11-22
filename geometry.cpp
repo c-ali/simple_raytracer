@@ -7,7 +7,7 @@
 #include "data_structures.h"
 
 using std::make_shared, std::min, std::max;
-
+int hit_count;
 ray::ray(vec3f origin,vec3f dir) : origin(origin), dir(dir){};
 
 void surface::set_color(QRgb color){this->color = color;};
@@ -74,6 +74,7 @@ triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, vec3f n2, vec3f n3)
 
 
 bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
+    hit_count++;
     //solve linear system
     float a = v1.x - v2.x;
     float b = v1.y - v2.y;
@@ -120,9 +121,11 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
     //compute normals
     vec3f normal;
     if(has_normals){
-        normal = (n1 + n2 + n3);
         if(interpolate_normals){
             normal = (1 - gamma - beta) * n1 + (beta) * n2 + gamma * n3;
+        }
+        else{
+            normal = (n1 + n2 + n3);
         }
     }
     else
@@ -130,7 +133,6 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
     normal = normal.normalized();
 
     rec.register_hit(normal, intersect_coord, color, t);
-
     return true;
 };
 
@@ -138,11 +140,14 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
 bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
     if(!(basic_tree || fast_tree))
         return mesh::hit_without_tree(r, t0, t1, rec);
-    if(fast_tree)
-        return mesh::hit_with_tree(fast_tree, r, t0, t1, rec);
+    if(fast_tree){
+        float min_param, max_param;
+        intersectBox(r, bbox, min_param, max_param);
+        rec.t = max_param;
+        return mesh::hit_with_tree(fast_tree, r, min_param, max_param, rec);
+    }
     if(basic_tree)
         return mesh::hit_with_tree(basic_tree, r, t0, t1, rec);
-
 }
 
 bool mesh::hit_without_tree(ray r, float t0, float t1, hit_record &rec){
@@ -172,14 +177,14 @@ bool mesh::hit_with_tree(std::shared_ptr<basic_kd_tree> &node,ray r, float t0, f
     }
 
     //else recurse
-    if(node->lower != NULL && intersects(node->upper_split_bbox, r)){
+    if(node->lower && intersects(node->upper_split_bbox, r)){
         if(mesh::hit_with_tree(node->upper, r, t0, t, rec)){
             hit = true;
             t = rec.get_t();
         }
     }
 
-    if(node->upper != NULL && intersects(node->lower_split_bbox, r)){
+    if(node->upper  && intersects(node->lower_split_bbox, r)){
         if(mesh::hit_with_tree(node->lower, r, t0, t, rec)){
             hit = true;
             t = rec.get_t();
@@ -201,6 +206,7 @@ bool mesh::hit_with_tree(std::shared_ptr<fast_kd_tree> &node,ray r, float t0, fl
             }
         }
 
+        // -- compute ray-split plane intersection (for overlapping nodes)
         float rayParamPlaneUpper = (node->upper_node_lower_bound - r.origin[node->split_dim]) / r.dir[node->split_dim];
         float rayParamPlaneLower = (node->lower_node_upper_bound - r.origin[node->split_dim]) / r.dir[node->split_dim];
 
@@ -210,12 +216,12 @@ bool mesh::hit_with_tree(std::shared_ptr<fast_kd_tree> &node,ray r, float t0, fl
                 if (hit_with_tree   (node->lower, r, t0, min(rec.get_t(), min(t1, rayParamPlaneLower)), rec)) hit=true;
             }
 
-            if (node->upper && rayParamPlaneUpper < t1) {
+            if (node->lower && rayParamPlaneUpper < t1) {
                 if (hit_with_tree   (node->upper, r, max(t0, rayParamPlaneUpper), min(rec.get_t(), t1), rec)) hit=true;
             }
         // -- case two - node traverses from upper to lower
         } else {
-            if (node->upper && rayParamPlaneUpper >= t0) {
+            if (node->lower && rayParamPlaneUpper >= t0) {
                 if (hit_with_tree   (node->upper, r, t0, min(rec.get_t(), min(t1, rayParamPlaneUpper)), rec)) hit=true;
             }
 
@@ -223,7 +229,7 @@ bool mesh::hit_with_tree(std::shared_ptr<fast_kd_tree> &node,ray r, float t0, fl
                 if (hit_with_tree   (node->lower, r, max(t0, rayParamPlaneLower), min(rec.get_t(), t1), rec)) hit=true;
             }
         }
-        return hit;
+       return hit;
 }
 
 mesh::mesh(){}
@@ -309,6 +315,15 @@ void mesh::read_obj(const char* path){
             }
         }
     }
+    bbox = bounding_box();
+}
+
+box mesh::bounding_box(){
+    box b = box();
+    for(size_t i = 0; i < faces.size(); ++i){
+        b = box_union(b, faces[i]->bounding_box());
+    }
+    return b;
 }
 
 void mesh::build_basic_tree(int min_node_size, int max_depth){
