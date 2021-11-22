@@ -25,7 +25,7 @@ private:
     vec3f sect_coords;
     QRgb surface_color;
 public:
-    float t = std::numeric_limits<float>::max();
+    float t = 1e10f;
     vec3f* get_normal();
     vec3f*  get_sect_coords();
     QRgb*  get_surface_color();
