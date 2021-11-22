@@ -144,7 +144,7 @@ bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
         float min_param, max_param;
         intersectBox(r, bbox, min_param, max_param);
         rec.t = max_param;
-        return mesh::hit_with_tree(fast_tree, r, min_param, max_param, rec);
+        return mesh::hit_with_tree(fast_tree, r, t0, max_param, rec);
     }
     if(basic_tree)
         return mesh::hit_with_tree(basic_tree, r, t0, t1, rec);

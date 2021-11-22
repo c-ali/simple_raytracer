@@ -52,7 +52,7 @@ QImage view_mesh(){
     std::shared_ptr<surface> wall = std::make_shared<triangle>(vec3f(300,300,-3), vec3f(-300,300,-3), vec3f(0,-300,-3));
     wall->set_color(qRgb(255,255,255));
     msh.add_surface(wall);
-    msh.build_fast_tree(2, 50);
+    msh.build_basic_tree(2, 50);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, light_srcs, light_intensities);
     QImage img = v.render();
     return img;
