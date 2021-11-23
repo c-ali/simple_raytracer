@@ -24,15 +24,17 @@ private:
     vec3f normal;
     vec3f sect_coords;
     QRgb surface_color;
+    bool specular;
 public:
     float t = 1e10f;
     vec3f* get_normal();
     vec3f*  get_sect_coords();
     QRgb*  get_surface_color();
+    bool is_specular();
     void reset();
     hit_record();
     float get_t();
-    void register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t);
+    void register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular);
 };
 
 

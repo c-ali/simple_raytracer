@@ -4,14 +4,14 @@
 #include "shading.h"
 
 view::view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh, float viewing_dst, std::vector<vec3f> light_srcs, std::vector<float> light_intensites) :
-    img_width(width), img_height(height), viewer_pos(viewer_pos), w(viewing_dir), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs), light_intensites(light_intensites){
+    img_width(width), img_height(height), viewer_pos(viewer_pos), w(viewing_dir.normalized()), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs), light_intensites(light_intensites){
     //initialize random seed
     srand (static_cast <unsigned> (time(0)));
 }
 
 QImage view::render(){
     int hit_count = 0;
-    phong_shader s = phong_shader(light_srcs, viewer_pos, light_intensites);
+    shdr = std::make_shared<phong_shader>(light_srcs, viewer_pos, light_intensites);
     //lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
     vec3f ray_direction, ray_origin;
     QImage img(img_width, img_height, QImage::Format_RGB16);
@@ -20,7 +20,7 @@ QImage view::render(){
         //progress
         for(int j = 0; j < img_width; ++j){
             //set default color
-            QRgb rgb = qRgb(255,255,255);
+            QRgb rgb;
             float avg_red = 0, avg_blue = 0, avg_green = 0;
             float u_offset, v_offset;
 
@@ -53,25 +53,8 @@ QImage view::render(){
 
 
                 ray light_ray = ray(ray_origin, ray_direction);
-                hit_record hr = hit_record(); //view hit record
-                hit_record sr = hit_record(); //shadow record
 
-                //check if ray hits any object
-                if(msh.hit(light_ray, eps, max_dist, hr)){
-                    vec3f const *sect_pt = hr.get_sect_coords();
-                    if(shadows){
-                        std::vector<bool> in_shadow;
-                        //check for shadow by each light source
-                        for(size_t k = 0; k < light_srcs.size(); ++k){
-                            vec3f ray_dir = light_srcs[k] - *sect_pt;
-                            ray shadow_ray = ray(*sect_pt, ray_dir);
-                            in_shadow.push_back(msh.hit(shadow_ray, eps, max_dist, sr));
-                        }
-                        rgb = s.shade(hr, in_shadow);
-                    }
-                    else
-                        rgb = s.shade(hr, std::vector<bool>(light_srcs.size(),false));
-                }
+                rgb = ray_color(light_ray, eps, max_dist, 0);
 
                 //add colors to average
                 QColor color(rgb);
@@ -88,3 +71,40 @@ QImage view::render(){
     return img;
 }
 
+QRgb view::ray_color(ray r, float t0, float t1, int recursion_depth){
+    QRgb color = background_color;
+
+    hit_record hr = hit_record(); //view hit record
+    hit_record sr = hit_record(); //shadow record
+
+    //check if ray hits any object
+    if(msh.hit(r, t0, t1, hr)){
+        vec3f const *sect_pt = hr.get_sect_coords();
+        if(shadows){
+            std::vector<bool> in_shadow;
+            //check for shadow by each light source
+            for(size_t k = 0; k < light_srcs.size(); ++k){
+                vec3f ray_dir = light_srcs[k] - *sect_pt;
+                ray shadow_ray = ray(*sect_pt, ray_dir);
+                in_shadow.push_back(msh.hit(shadow_ray, t0, t1, sr));
+            }
+            color = shdr->shade(hr, in_shadow);
+        }
+        else
+            color = shdr->shade(hr, std::vector<bool>(light_srcs.size(),false));
+
+
+        //if specular reflection is used, recurse call
+        if(hr.is_specular() && recursion_depth < max_recursion_depth){
+            vec3f n = *hr.get_normal();
+            vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
+            ray r_(*hr.get_sect_coords(), dir_);
+            return ray_color(r_, eps, max_dist, recursion_depth+1);
+        }
+
+
+    }
+
+    return color;
+
+}

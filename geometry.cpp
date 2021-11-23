@@ -37,8 +37,7 @@ bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
             //fill hit record and report hit
             //get section coordinate, normal and color
             vec3f intersect_coord = r.origin + t_intersect * r.dir;
-            rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t_intersect);
-
+            rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t_intersect, specular);
             return true;
         }
     }
@@ -132,15 +131,54 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
         normal = cross((v2 - v1),(v3 - v1));
     normal = normal.normalized();
 
-    rec.register_hit(normal, intersect_coord, color, t);
+    rec.register_hit(normal, intersect_coord, color, t, specular);
     return true;
 };
+
+
+checkerboard::checkerboard(float height) : height(height){};
+
+box checkerboard::bounding_box()
+{
+    return box(vec3f(-1e30,-1e30,height), vec3f(1e-30,1e30,height));
+}
+
+vec3f checkerboard::centroid()
+{
+    return vec3f(0,height,0);
+}
+
+bool checkerboard::hit(ray r, float t0, float t1, hit_record &rec)
+{
+    float t_sect = (height - r.origin.y) / r.dir.y;
+
+    if(t_sect < t0 || t_sect > t1)
+        return false;
+
+    vec3f sect_coords = r.origin + t_sect * r.dir;
+
+    if(std::fmod(std::abs(sect_coords.x) + std::abs(sect_coords.z), 2) < 1)
+    //if(std::fmod(sect_coords.x + sect_coords.z, 5) < 2.5)
+        color = qRgb(255,255,255);
+    else
+        color = qRgb(0,0,0);
+    vec3f normal(0,1,0);
+    rec.register_hit(normal, sect_coords , color, t_sect, specular);
+    return true;
+}
 
 
 bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
     if(!(basic_tree || fast_tree))
         return mesh::hit_without_tree(r, t0, t1, rec);
     if(fast_tree){
+        float t_x_max = (bbox.max.x - r.origin.x) / r.dir.x;
+        float t_y_max = (bbox.max.y - r.origin.y) / r.dir.y;
+        float t_z_max = (bbox.max.z - r.origin.z) / r.dir.z;
+
+        float t_max = std::max(t_x_max, std::max(t_y_max, t_z_max));
+        rec.t = t_max;
+
         return mesh::hit_with_tree(fast_tree, r, t0, t1, rec);
     }
     if(basic_tree)
@@ -210,20 +248,20 @@ bool mesh::hit_with_tree(std::shared_ptr<fast_kd_tree> &node,ray r, float t0, fl
         // -- case one - node traverses from lower to upper
         if (r.dir[node->split_dim] >= 0) {
             if (node->lower && rayParamPlaneLower >= t0) {
-                if (hit_with_tree   (node->lower, r, t0, min(t1, rayParamPlaneLower), rec)) hit=true;
+                if (hit_with_tree   (node->lower, r, t0, min(rec.get_t(), min(t1, rayParamPlaneLower)), rec)) hit=true;
             }
 
             if (node->lower && rayParamPlaneUpper < t1) {
-                if (hit_with_tree   (node->upper, r, max(t0, rayParamPlaneUpper),  t1, rec)) hit=true;
+                if (hit_with_tree   (node->upper, r, max(t0, rayParamPlaneUpper), min(rec.get_t(), t1), rec)) hit=true;
             }
         // -- case two - node traverses from upper to lower
         } else {
             if (node->lower && rayParamPlaneUpper >= t0) {
-                if (hit_with_tree   (node->upper, r, t0, min(t1, rayParamPlaneUpper), rec)) hit=true;
+                if (hit_with_tree   (node->upper, r, t0, min(rec.get_t(), min(t1, rayParamPlaneUpper)), rec)) hit=true;
             }
 
             if (node->lower && rayParamPlaneLower < t1) {
-                if (hit_with_tree   (node->lower, r, max(t0, rayParamPlaneLower), t1, rec)) hit=true;
+                if (hit_with_tree   (node->lower, r, max(t0, rayParamPlaneLower), min(rec.get_t(), t1), rec)) hit=true;
             }
         }
        return hit;
@@ -340,4 +378,5 @@ vec3f mesh::get_vertex(int idx){
 vec3f mesh::get_normal(int idx){
     return normals.at(idx-1);
 }
+
 
