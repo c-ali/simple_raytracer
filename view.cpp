@@ -9,8 +9,13 @@ view::view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh
     srand (static_cast <unsigned> (time(0)));
 }
 
+float randf(float scale){
+    return scale*2*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+}
+
 QImage view::render(){
     int hit_count = 0;
+    float focal_offset = (focal_dist - viewing_dst) / focal_dist ; //calculate once, needed for focal dist
     shdr = std::make_shared<phong_shader>(light_srcs, viewer_pos, light_intensites);
     //lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
     vec3f ray_direction, ray_origin;
@@ -21,15 +26,15 @@ QImage view::render(){
         for(int j = 0; j < img_width; ++j){
             //set default color
             QRgb rgb;
-            float avg_red = 0, avg_blue = 0, avg_green = 0;
+            float red_sum = 0, blue_sum = 0, green_sum = 0;
             float u_offset, v_offset;
 
             for(int k = 0; k < samples_per_ray; k++){
                 //compute pixel coordinates. jitter if necessary
-                if(samples_per_ray > 1){
+                if(false){
                     //random number between 0 and 1
-                    float rx = 2*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-                    float ry = 2*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    float rx = randf(1);
+                    float ry = randf(1);
 
                     u_offset = -1 + 2 * (i + 0.5 + rx) / img_width;
                     v_offset = -1 + 2 * (j + 0.5 + ry) / img_height;
@@ -38,6 +43,7 @@ QImage view::render(){
                     u_offset = -1 + 2 * (i + 0.5) / img_width;
                     v_offset = -1 + 2 * (j + 0.5) / img_height;
                 }
+
 
                 //compute ray direction and origin for different projection modes
                 switch(MODE){
@@ -51,6 +57,14 @@ QImage view::render(){
                     } break;
                 }
 
+                if(focal_dist > 0){
+                    float scale = 0.02;
+                    float rand_u_offset = randf(scale);
+                    float rand_v_offset = randf(scale);
+                    ray_origin = ray_origin - (u * rand_u_offset + v * rand_v_offset);
+                    ray_direction = ray_direction + u * rand_u_offset * focal_offset + v * rand_v_offset * focal_offset;
+                }
+
 
                 ray light_ray = ray(ray_origin, ray_direction);
 
@@ -58,14 +72,14 @@ QImage view::render(){
 
                 //add colors to average
                 QColor color(rgb);
-                avg_red += color.red()/samples_per_ray;
-                avg_blue += color.blue()/samples_per_ray;
-                avg_green += color.green()/samples_per_ray;
+                red_sum += color.red();
+                blue_sum += color.blue();
+                green_sum += color.green();
             }
 
 
             //average over num iterations and set color
-            img.setPixel(i,j,qRgb(avg_red, avg_green, avg_blue));
+            img.setPixel(i,j,qRgb(red_sum / samples_per_ray, green_sum / samples_per_ray, blue_sum / samples_per_ray));
         }
     }
     return img;

@@ -172,13 +172,6 @@ bool mesh::hit(ray r, float t0, float t1, hit_record &rec){
     if(!(basic_tree || fast_tree))
         return mesh::hit_without_tree(r, t0, t1, rec);
     if(fast_tree){
-        float t_x_max = (bbox.max.x - r.origin.x) / r.dir.x;
-        float t_y_max = (bbox.max.y - r.origin.y) / r.dir.y;
-        float t_z_max = (bbox.max.z - r.origin.z) / r.dir.z;
-
-        float t_max = std::max(t_x_max, std::max(t_y_max, t_z_max));
-        rec.t = t_max;
-
         return mesh::hit_with_tree(fast_tree, r, t0, t1, rec);
     }
     if(basic_tree)

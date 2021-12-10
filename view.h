@@ -30,7 +30,8 @@ private:
     float eps = 1e-3;
     float max_dist = 1e30;
 
-    int samples_per_ray = 1;
+    int samples_per_ray = 100;
+    float focal_dist = 3;
 
     const char MODE = 'p'; // p = perspectivic; o = orthographic
 
