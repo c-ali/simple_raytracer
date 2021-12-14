@@ -15,7 +15,6 @@ float randf(float scale){
 
 QImage view::render(){
     int hit_count = 0;
-    float focal_offset = (focal_dist - viewing_dst) / focal_dist ; //calculate once, needed for focal dist
     shdr = std::make_shared<phong_shader>(light_srcs, viewer_pos, light_intensites);
     //lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
     vec3f ray_direction, ray_origin;
@@ -58,11 +57,11 @@ QImage view::render(){
                 }
 
                 if(focal_dist > 0){
-                    float scale = 0.02;
-                    float rand_u_offset = randf(scale);
-                    float rand_v_offset = randf(scale);
-                    ray_origin = ray_origin - (u * rand_u_offset + v * rand_v_offset);
-                    ray_direction = ray_direction + u * rand_u_offset * focal_offset + v * rand_v_offset * focal_offset;
+                    float rx_dof = randf(aperture); //offset for DOF
+                    float ry_dof = randf(aperture); //offset for DOF
+                    vec3f focal_pt = ray_origin + ray_direction * focal_dist;
+                    ray_origin = ray_origin + u * rx_dof + v * ry_dof;
+                    ray_direction = focal_pt - ray_origin;
                 }
 
 

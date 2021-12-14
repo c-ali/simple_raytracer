@@ -14,6 +14,9 @@ extern int hit_count;
 
 class view
 {
+public:
+    float focal_dist = 1; //DOF dist
+    float aperture = 0.01; //DOF aperture
 private:
     int img_width, img_height;
     vec3f viewer_pos;
@@ -30,8 +33,7 @@ private:
     float eps = 1e-3;
     float max_dist = 1e30;
 
-    int samples_per_ray = 100;
-    float focal_dist = 3;
+    int samples_per_ray = 20;
 
     const char MODE = 'p'; // p = perspectivic; o = orthographic
 

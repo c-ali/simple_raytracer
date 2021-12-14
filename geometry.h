@@ -17,7 +17,7 @@ public:
 
 class surface {
 public:
-    QRgb color = qRgb(0,255,0);
+    QRgb color = qRgb(0,100,0);
     bool specular = false;
     virtual bool hit(ray r, float t0, float t1, hit_record &rec) = 0;
     virtual box bounding_box() = 0;
