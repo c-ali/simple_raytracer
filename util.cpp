@@ -1,18 +1,23 @@
+#include <QColor>
 #include "util.h"
 #include "data_structures.h"
 #include "geometry.h"
 
 
-//getter and setter for hit_record
+
+
 hit_record::hit_record(){};
 
-void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular){
+void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, float emittence){
     this->normal = normal;
     this->sect_coords = sect_coords;
     this->surface_color = surface_color;
     this->t = t;
     this->specular = specular;
+    this->emittence = emittence;
 }
+
+
 
 void hit_record::reset(){
     t = std::numeric_limits<float>::max();
@@ -23,6 +28,8 @@ vec3f*  hit_record::get_normal(){return &normal;};
 vec3f*  hit_record::get_sect_coords(){return &sect_coords;};
 
 QRgb*  hit_record::get_surface_color(){return &surface_color;};
+
+QRgb* hit_record::get_emittence(){return &emittence;};
 
 float hit_record::get_t(){return t;};
 
@@ -69,4 +76,12 @@ bool intersects(const box &b, const ray &r){
         return false;
 
     return true;
+}
+
+QRgb add(const QRgb &first, const QRgb &second){
+    return qRgb(qRed(first) + qRed(second), qGreen(first) + qGreen(second), qBlue(first) + qBlue(second));
+}
+
+QRgb mult(const QRgb &first, const QRgb &second){
+    return qRgb(qRed(first) * qRed(second), qGreen(first) * qGreen(second), qBlue(first) * qBlue(second));
 }

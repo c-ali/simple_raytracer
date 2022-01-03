@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <math.h>
 #include "view.h"
 #include "algebra.h"
 #include "shading.h"
@@ -10,7 +11,8 @@ view::view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh
 }
 
 float randf(float scale){
-    return scale*2*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    //returns random float between 0 and 1
+    return scale * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 }
 
 QImage view::render(){
@@ -67,7 +69,10 @@ QImage view::render(){
 
                 ray light_ray = ray(ray_origin, ray_direction);
 
-                rgb = ray_color(light_ray, eps, max_dist, 0);
+                if(!path_tracing)
+                    rgb = ray_color(light_ray, eps, max_dist, 0);
+                else
+                    rgb = trace_color(light_ray, eps, max_dist, 0);
 
                 //add colors to average
                 QColor color(rgb);
@@ -85,6 +90,8 @@ QImage view::render(){
 }
 
 QRgb view::ray_color(ray r, float t0, float t1, int recursion_depth){
+    //use regular raytracing to determine the color of a pixel
+
     QRgb color = background_color;
 
     hit_record hr = hit_record(); //view hit record
@@ -120,4 +127,72 @@ QRgb view::ray_color(ray r, float t0, float t1, int recursion_depth){
 
     return color;
 
+}
+
+
+QRgb view::trace_color(ray r, float t0, float t1, int recursion_depth){
+    //use path_tracing to determine the color of a pixel
+    //supports only diffuse surfaces for now
+
+    QRgb color = background_color;
+    hit_record hr = hit_record(); //view hit record
+
+    //check if ray hits any object
+    if(msh.hit(r, t0, t1, hr) && recursion_depth < max_recursion_depth){
+        vec3f sect_pt = *hr.get_sect_coords();
+        vec3f normal = *hr.get_normal();
+
+        //cast new ray in hemisphere with correct probability
+        ray r_new = random_ray_in_hemisphere(sect_pt, normal);
+        float p = 1 / (2 * M_PI);
+
+        //compute brdf
+        float cos_angle = r_new.dir * normal;
+        float brdf = 1 / M_PI;
+
+        //recursively trace reflected light
+        QRgb incoming = trace_color(r_new, t0, t1, recursion_depth + 1);
+
+        //if specular reflection is used, recurse call
+        if(hr.is_specular() && recursion_depth < max_recursion_depth){
+            vec3f n = *hr.get_normal();
+            vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
+            ray r_(*hr.get_sect_coords(), dir_);
+            return trace_color(r_, eps, max_dist, recursion_depth+1);
+        }
+
+        //apply rendering eq
+
+        return add(*hr.get_emittence(), brdf * mult(incoming, *hr.get_surface_color()) * cos_angle / p);
+
+    }
+
+    //if there is no hit or max recursion depth is reached return bgc
+    return color;
+
+}
+
+ray random_ray_in_hemisphere(const vec3f &origin, const vec3f &normal){
+    //returns random ray in hemisphere of origin
+
+    //random numbers between 0-1 and 1
+    float x, y, z, radius;
+    vec3f dir;
+    do{
+        x = randf(2)-1;
+        z = randf(2)-1;
+        y = randf(2)-1;
+        radius = std::sqrt(x*x+y*y+z*z);
+    }
+    while(radius > 1 || radius == 0); //check if is inside ball & correct hemisphere
+    x /= radius;
+    y /= radius;
+    z /= radius;
+
+    //check if dir has the correct orientation
+    dir = vec3f(x-origin.x,y-origin.y,z-origin.z);
+    if(dir * normal > 0)
+        return ray(origin, dir);
+    else
+        return ray(origin, -dir);
 }

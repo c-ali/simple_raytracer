@@ -9,7 +9,6 @@
 #include "algebra.h"
 #include "view.h"
 
-
 QImage focal_scene(){
     int width = 1000;
     int height = 1000;
@@ -36,6 +35,7 @@ QImage focal_scene(){
     view v = view(width,height, viewer_pos,w, msh, viewing_dst, light_srcs, light_intensities);
     v.focal_dist = std::sqrt(13)-0.5;
     v.aperture = 0.1;
+    v.samples_per_ray = 20;
     QImage img = v.render();
     return img;
 }
@@ -112,12 +112,70 @@ QImage view_mesh(){
     return img;
 }
 
+QImage cornell_box(){
+    int width = 500;
+    int height = 500;
+    float viewing_dst = 0.68;
+    vec3f w = vec3f(0,0,1);
+    mesh msh = mesh();
+    vec3f viewer_pos = vec3f(0,5,-0.1);
+    QRgb red = qRgb(255,0,0);
+    QRgb green = qRgb(0,255,0);
+    QRgb blue = qRgb(0,0,255);
+    QRgb white = qRgb(255,255,255);
+    QRgb black = qRgb(0,0,0);
+
+    //right wall
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,0,0), vec3f(10,10,0), vec3f(10,0,-10), red));
+    msh.add_surface(std::make_shared<triangle>( vec3f(10,0,-10),vec3f(10,10,0), vec3f(10,10,-10), red));
+
+    //left wall
+    msh.add_surface(std::make_shared<triangle>( vec3f(-10,10,0), vec3f(-10,0,0), vec3f(-10,0,-10), blue));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,10,0), vec3f(-10,0,-10), vec3f(-10,10,-10), blue));
+
+
+    //back wall
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,-10),vec3f(10,10,-10), vec3f(-10,10,-10), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,0,-10), vec3f(10,0,-10), white));
+
+    //front wall
+//    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0),vec3f(10,10,0), vec3f(-10,10,0), white));
+//    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(-10,0,0), vec3f(10,0,0), white));
+
+    //ceiling
+    msh.add_surface(std::make_shared<triangle>( vec3f(10,10,0), vec3f(-10,10,0), vec3f(10,10,-10), green));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,10,0), vec3f(-10,10,-10), green));
+
+    //floor
+    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,0), vec3f(10,0,0), vec3f(10,0,-10), green));
+    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,0), vec3f(10,0,-10), vec3f(-10,0,-10), green));
+
+    //add spheres
+    msh.add_surface(std::make_shared<sphere>(vec3f(8,1,-5), 1, white));
+    msh.add_surface(std::make_shared<sphere>(vec3f(-8,1,-5), 1,white));
+
+    //add light
+    std::shared_ptr<surface> lamp = std::make_shared<sphere>(vec3f(0,5,0), 2, white);
+    lamp->emittence = 1;
+    //msh.add_surface(lamp);
+
+    std::vector<vec3f> lamps;
+    lamps.push_back(vec3f(0,5,-5));
+    std::vector<float> intensities;
+    intensities.push_back(1);
+    view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
+    v.samples_per_ray = 10;
+    v.max_recursion_depth = 5;
+    v.path_tracing = false;
+    return v.render();
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QPixmap image;
     //QImage img = focal_scene();
-    QImage img = view_mesh();
+    QImage img = cornell_box();
     //QImage img = mirror_scene();
     img.save("rendered.png");
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();

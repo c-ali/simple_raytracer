@@ -14,6 +14,8 @@ void surface::set_color(QRgb color){this->color = color;};
 
 sphere::sphere(vec3f center, float radius) : center(center), radius(radius){};
 
+sphere::sphere(vec3f center, float radius, QRgb color) : center(center), radius(radius){this->color = color;};
+
 vec3f sphere::get_normal(vec3f sec_pt){
     //unit normal to the surface
     vec3f res = sec_pt - center;
@@ -37,7 +39,7 @@ bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
             //fill hit record and report hit
             //get section coordinate, normal and color
             vec3f intersect_coord = r.origin + t_intersect * r.dir;
-            rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t_intersect, specular);
+            rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t_intersect, specular, emittence);
             return true;
         }
     }
@@ -67,6 +69,8 @@ vec3f sphere::centroid(){
 }
 
 triangle::triangle(vec3f v1, vec3f v2, vec3f v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
+
+triangle::triangle(vec3f v1, vec3f v2, vec3f v3, QRgb color) : v1(v1), v2(v2), v3(v3), has_normals(false){this->color = color;};
 
 triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, vec3f n2, vec3f n3)
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
@@ -131,7 +135,7 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
         normal = cross((v2 - v1),(v3 - v1));
     normal = normal.normalized();
 
-    rec.register_hit(normal, intersect_coord, color, t, specular);
+    rec.register_hit(normal, intersect_coord, color, t, specular, emittence);
     return true;
 };
 
@@ -163,7 +167,7 @@ bool checkerboard::hit(ray r, float t0, float t1, hit_record &rec)
     else
         color = qRgb(0,0,0);
     vec3f normal(0,1,0);
-    rec.register_hit(normal, sect_coords , color, t_sect, specular);
+    rec.register_hit(normal, sect_coords , color, t_sect, specular, emittence);
     return true;
 }
 

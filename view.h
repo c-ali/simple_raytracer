@@ -15,8 +15,12 @@ extern int hit_count;
 class view
 {
 public:
-    float focal_dist = 1; //DOF dist
+    float focal_dist = -1; //DOF dist. Use -1 to turn off DOF
     float aperture = 0.01; //DOF aperture
+    int samples_per_ray = 1;
+    bool path_tracing = false;
+    int max_recursion_depth = 5;
+
 private:
     int img_width, img_height;
     vec3f viewer_pos;
@@ -25,7 +29,6 @@ private:
     std::vector<vec3f> light_srcs;
     bool shadows = true;
     std::vector<float> light_intensites;
-    int max_recursion_depth = 5;
 
     vec3f u = vec3f(1,0,0); //right
     vec3f v = vec3f(0,-1,0); //up
@@ -33,17 +36,19 @@ private:
     float eps = 1e-3;
     float max_dist = 1e30;
 
-    int samples_per_ray = 20;
-
     const char MODE = 'p'; // p = perspectivic; o = orthographic
 
     QRgb background_color = qRgb(255,255,255); //background color
     std::shared_ptr<shader> shdr;
 
     QRgb ray_color(ray r, float t0, float t1, int recursion_depth);
+    QRgb trace_color(ray r, float t0, float t1, int recursion_depth);
 public:
     QImage render();
     view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh, float viewing_dst, std::vector<vec3f> light_srcs, std::vector<float> light_intensites);
 };
+
+ray random_ray_in_hemisphere(const vec3f &origin, const vec3f &normal);
+
 
 #endif // VIEW_H
