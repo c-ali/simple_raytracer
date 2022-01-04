@@ -22,77 +22,78 @@ QImage view::render(){
     int hit_count = 0;
     shdr = std::make_shared<phong_shader>(light_srcs, viewer_pos, light_intensites);
     //lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
-    vec3f ray_direction, ray_origin;
-    QImage img(img_width, img_height, QImage::Format_RGB16);
+    std::list<std::future<void>> futures;
+    img = QImage(img_width, img_height, QImage::Format_RGB16);
     //loop over pixels
     for(int i = 0; i < img_height; ++i){
         //progress
-        for(int j = 0; j < img_width; ++j){
-            //set default color
-            QColor col;
-            float red_sum = 0, blue_sum = 0, green_sum = 0;
-            float u_offset, v_offset;
-            std::list<std::future<QRgb>> futures;
+           futures.push_back(std::async(std::launch::async, &view::compute_line, std::ref(*this), i));
+    }
 
-            for(int k = 0; k < samples_per_ray; k++){
-                //compute pixel coordinates. jitter if necessary
-                if(anti_alias){
-                    //random number between 0 and 1
-                    float rx = randf(1);
-                    float ry = randf(1);
-
-                    u_offset = -1 + 2 * (i + 0.5 + rx) / img_width;
-                    v_offset = -1 + 2 * (j + 0.5 + ry) / img_height;
-                }
-                else{
-                    u_offset = -1 + 2 * (i + 0.5) / img_width;
-                    v_offset = -1 + 2 * (j + 0.5) / img_height;
-                }
-
-
-                //compute ray direction and origin for different projection modes
-                switch(MODE){
-                    case 'o': {
-                        ray_direction = -w;
-                        ray_origin = viewer_pos + u * u_offset + v * v_offset;
-                    } break;
-                    case 'p': {
-                        ray_direction = -viewing_dst * w + u * u_offset + v * v_offset;
-                        ray_origin = viewer_pos;
-                    } break;
-                }
-
-                if(focal_dist > 0){
-                    float rx_dof = randf(aperture); //offset for DOF
-                    float ry_dof = randf(aperture); //offset for DOF
-                    vec3f focal_pt = ray_origin + ray_direction * focal_dist;
-                    ray_origin = ray_origin + u * rx_dof + v * ry_dof;
-                    ray_direction = focal_pt - ray_origin;
-                }
-
-
-                ray light_ray = ray(ray_origin, ray_direction);
-
-                if(!path_tracing)
-                    futures.push_back(std::async(std::launch::async, &view::ray_color, std::ref(*this), std::ref(light_ray), std::ref(eps), std::ref(max_dist), 0));
-                else
-                    futures.push_back(std::async(std::launch::async, &view::trace_color, std::ref(*this), std::ref(light_ray), 0));
-            }
-
-            //add colors to average
-            for(int i = 0; i < futures.size(); ++i){
-                col = futures.back().get();
-                red_sum += col.red();
-                blue_sum += col.blue();
-                green_sum += col.green();
-                futures.pop_back();
-            }
-
-            //average over num iterations and set color
-            img.setPixel(i,j,qRgb(red_sum / samples_per_ray, green_sum / samples_per_ray, blue_sum / samples_per_ray));
-        }
+    //wait for all threads
+    for(int i = 0; i < futures.size(); ++i){
+        futures.back().wait();
+        futures.pop_back();
     }
     return img;
+}
+
+void view::compute_line(int i){
+    for(int j = 0; j < img_width; ++j){
+        float u_offset, v_offset;
+        float red_sum = 0, blue_sum = 0, green_sum = 0;
+        vec3f ray_direction, ray_origin;
+        QRgb col;
+        for(int k = 0; k < samples_per_ray; k++){
+            //compute pixel coordinates. jitter if necessary
+            if(anti_alias){
+                //random number between 0 and 1
+                float rx = randf(1);
+                float ry = randf(1);
+
+                u_offset = -1 + 2 * (i + 0.5 + rx) / img_width;
+                v_offset = -1 + 2 * (j + 0.5 + ry) / img_height;
+            }
+            else{
+                u_offset = -1 + 2 * (i + 0.5) / img_width;
+                v_offset = -1 + 2 * (j + 0.5) / img_height;
+            }
+
+
+            //compute ray direction and origin for different projection modes
+            switch(MODE){
+                case 'o': {
+                    ray_direction = -w;
+                    ray_origin = viewer_pos + u * u_offset + v * v_offset;
+                } break;
+                case 'p': {
+                    ray_direction = -viewing_dst * w + u * u_offset + v * v_offset;
+                    ray_origin = viewer_pos;
+                } break;
+            }
+
+            if(focal_dist > 0){
+                float rx_dof = randf(aperture); //offset for DOF
+                float ry_dof = randf(aperture); //offset for DOF
+                vec3f focal_pt = ray_origin + ray_direction * focal_dist;
+                ray_origin = ray_origin + u * rx_dof + v * ry_dof;
+                ray_direction = focal_pt - ray_origin;
+            }
+
+
+            ray light_ray = ray(ray_origin, ray_direction);
+
+            if(!path_tracing)
+                col = ray_color(light_ray, eps, max_dist, 0);
+            else
+                col = trace_color(light_ray, 0);
+
+            red_sum += qRed(col);
+            green_sum += qGreen(col);
+            blue_sum += qBlue(col);
+        }
+        img.setPixel(i,j, qRgb(red_sum / samples_per_ray, green_sum / samples_per_ray, blue_sum / samples_per_ray));
+    }
 }
 
 QRgb view::ray_color(ray r, float t0, float t1, int recursion_depth){

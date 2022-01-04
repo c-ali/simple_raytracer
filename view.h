@@ -26,6 +26,7 @@ public:
     bool anti_alias = false;
 
 private:
+    QImage img;
     int img_width, img_height;
     vec3f viewer_pos;
     mesh msh;
@@ -47,6 +48,7 @@ private:
     const float p_diffuse =  1 / (2 * M_PI);
     QRgb ray_color(ray r, float t0, float t1, int recursion_depth);
     QRgb trace_color(ray r, int recursion_depth);
+    void compute_line(int i);
 public:
     QImage render();
     view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh, float viewing_dst, std::vector<vec3f> light_srcs, std::vector<float> light_intensites);
