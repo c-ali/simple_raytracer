@@ -115,7 +115,7 @@ QImage view_mesh(){
 QImage cornell_box(){
     int width = 500;
     int height = 500;
-    float viewing_dst = 0.68;
+    float viewing_dst = 0.38;
     vec3f w = vec3f(0,0,1);
     mesh msh = mesh();
     vec3f viewer_pos = vec3f(0,5,-0.1);
@@ -123,50 +123,49 @@ QImage cornell_box(){
     QRgb green = qRgb(0,255,0);
     QRgb blue = qRgb(0,0,255);
     QRgb white = qRgb(255,255,255);
-    QRgb black = qRgb(0,0,0);
-
-    //right wall
-    msh.add_surface(std::make_shared<triangle>(vec3f(10,0,0), vec3f(10,10,0), vec3f(10,0,-10), red));
-    msh.add_surface(std::make_shared<triangle>( vec3f(10,0,-10),vec3f(10,10,0), vec3f(10,10,-10), red));
+    QRgb grey = qRgb(100,100,100);
 
     //left wall
-    msh.add_surface(std::make_shared<triangle>( vec3f(-10,10,0), vec3f(-10,0,0), vec3f(-10,0,-10), blue));
-    msh.add_surface(std::make_shared<triangle>(vec3f(-10,10,0), vec3f(-10,0,-10), vec3f(-10,10,-10), blue));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0), vec3f(-10,10,0), vec3f(-10,0,-10), vec3f(1,0,0),red, red));
+    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,-10),vec3f(-10,10,0), vec3f(-10,10,-10), vec3f(1,0,0), red, red));
+
+    //right wall
+    msh.add_surface(std::make_shared<triangle>( vec3f(10,10,0), vec3f(10,0,0), vec3f(10,0,-10), vec3f(-1,0,0), blue, blue));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(10,0,-10), vec3f(10,10,-10), vec3f(-1,0,0), blue, blue));
 
 
     //back wall
-    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,-10),vec3f(10,10,-10), vec3f(-10,10,-10), white));
-    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,0,-10), vec3f(10,0,-10), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,-10),vec3f(10,10,-10), vec3f(-10,10,-10), vec3f(0,0,1), grey));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,0,-10), vec3f(10,0,-10), vec3f(0,0,1), grey));
 
     //front wall
-//    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0),vec3f(10,10,0), vec3f(-10,10,0), white));
-//    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(-10,0,0), vec3f(10,0,0), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0),vec3f(10,10,0), vec3f(-10,10,0),vec3f(0,0,-1), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(-10,0,0), vec3f(10,0,0), vec3f(0,0,-1), white));
 
     //ceiling
-    msh.add_surface(std::make_shared<triangle>( vec3f(10,10,0), vec3f(-10,10,0), vec3f(10,10,-10), green));
-    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,10,0), vec3f(-10,10,-10), green));
+    msh.add_surface(std::make_shared<triangle>( vec3f(10,10,0), vec3f(-10,10,0), vec3f(10,10,-10), vec3f(0,-1,0), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,10,0), vec3f(-10,10,-10), vec3f(0,-1,0), white));
 
     //floor
-    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,0), vec3f(10,0,0), vec3f(10,0,-10), green));
-    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,0), vec3f(10,0,-10), vec3f(-10,0,-10), green));
+    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,0), vec3f(10,0,0), vec3f(10,0,-10),vec3f(0,1,0), white));
+    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,0), vec3f(10,0,-10), vec3f(-10,0,-10),vec3f(0,1,0), white));
 
     //add spheres
-    msh.add_surface(std::make_shared<sphere>(vec3f(8,1,-5), 1, white));
-    msh.add_surface(std::make_shared<sphere>(vec3f(-8,1,-5), 1,white));
+    //msh.add_surface(std::make_shared<sphere>(vec3f(6,1,-8), 2, white));
+    //msh.add_surface(std::make_shared<sphere>(vec3f(-6,1,-8), 2, white));
 
     //add light
-    std::shared_ptr<surface> lamp = std::make_shared<sphere>(vec3f(0,5,0), 2, white);
-    lamp->emittence = 1;
-    //msh.add_surface(lamp);
+    msh.add_surface(std::make_shared<sphere>(vec3f(0,10,-7), 3, white, white));
 
     std::vector<vec3f> lamps;
     lamps.push_back(vec3f(0,5,-5));
     std::vector<float> intensities;
     intensities.push_back(1);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
-    v.samples_per_ray = 10;
+    v.samples_per_ray = 5000;
     v.max_recursion_depth = 5;
-    v.path_tracing = false;
+    v.path_tracing = true;
+    v.shadows = false;
     return v.render();
 }
 

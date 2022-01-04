@@ -8,7 +8,7 @@
 
 hit_record::hit_record(){};
 
-void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, float emittence){
+void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, QRgb emittence){
     this->normal = normal;
     this->sect_coords = sect_coords;
     this->surface_color = surface_color;
@@ -84,4 +84,16 @@ QRgb add(const QRgb &first, const QRgb &second){
 
 QRgb mult(const QRgb &first, const QRgb &second){
     return qRgb(qRed(first) * qRed(second), qGreen(first) * qGreen(second), qBlue(first) * qBlue(second));
+}
+
+QRgb mult(const QRgb &first, const float scalar){
+    return qRgb(qRed(first) * scalar, qGreen(first) * scalar, qBlue(first) * scalar);
+}
+
+QRgb div(const QRgb &first, const QRgb &second){
+    return qRgb(qRed(first) / qRed(second), qGreen(first) / qGreen(second), qBlue(first) / qBlue(second));
+}
+
+QRgb div(const QRgb &first, const float scalar){
+    return qRgb(qRed(first) / scalar, qGreen(first) / scalar, qBlue(first) / scalar);
 }

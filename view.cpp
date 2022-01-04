@@ -1,5 +1,8 @@
 ﻿#include <iostream>
-#include <math.h>
+#include <thread>
+#include <future>
+#include <functional>
+#include <list>
 #include "view.h"
 #include "algebra.h"
 #include "shading.h"
@@ -11,7 +14,7 @@ view::view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh
 }
 
 float randf(float scale){
-    //returns random float between 0 and 1
+    //returns random float between 0 and scale
     return scale * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 }
 
@@ -26,13 +29,14 @@ QImage view::render(){
         //progress
         for(int j = 0; j < img_width; ++j){
             //set default color
-            QRgb rgb;
+            QColor col;
             float red_sum = 0, blue_sum = 0, green_sum = 0;
             float u_offset, v_offset;
+            std::list<std::future<QRgb>> futures;
 
             for(int k = 0; k < samples_per_ray; k++){
                 //compute pixel coordinates. jitter if necessary
-                if(false){
+                if(anti_alias){
                     //random number between 0 and 1
                     float rx = randf(1);
                     float ry = randf(1);
@@ -70,17 +74,19 @@ QImage view::render(){
                 ray light_ray = ray(ray_origin, ray_direction);
 
                 if(!path_tracing)
-                    rgb = ray_color(light_ray, eps, max_dist, 0);
+                    futures.push_back(std::async(std::launch::async, &view::ray_color, std::ref(*this), std::ref(light_ray), std::ref(eps), std::ref(max_dist), 0));
                 else
-                    rgb = trace_color(light_ray, eps, max_dist, 0);
-
-                //add colors to average
-                QColor color(rgb);
-                red_sum += color.red();
-                blue_sum += color.blue();
-                green_sum += color.green();
+                    futures.push_back(std::async(std::launch::async, &view::trace_color, std::ref(*this), std::ref(light_ray), 0));
             }
 
+            //add colors to average
+            for(int i = 0; i < futures.size(); ++i){
+                col = futures.back().get();
+                red_sum += col.red();
+                blue_sum += col.blue();
+                green_sum += col.green();
+                futures.pop_back();
+            }
 
             //average over num iterations and set color
             img.setPixel(i,j,qRgb(red_sum / samples_per_ray, green_sum / samples_per_ray, blue_sum / samples_per_ray));
@@ -130,7 +136,7 @@ QRgb view::ray_color(ray r, float t0, float t1, int recursion_depth){
 }
 
 
-QRgb view::trace_color(ray r, float t0, float t1, int recursion_depth){
+QRgb view::trace_color(ray r, int recursion_depth){
     //use path_tracing to determine the color of a pixel
     //supports only diffuse surfaces for now
 
@@ -138,32 +144,30 @@ QRgb view::trace_color(ray r, float t0, float t1, int recursion_depth){
     hit_record hr = hit_record(); //view hit record
 
     //check if ray hits any object
-    if(msh.hit(r, t0, t1, hr) && recursion_depth < max_recursion_depth){
-        vec3f sect_pt = *hr.get_sect_coords();
+    if(msh.hit(r, eps, max_dist, hr) && recursion_depth <= max_recursion_depth){
         vec3f normal = *hr.get_normal();
 
         //cast new ray in hemisphere with correct probability
-        ray r_new = random_ray_in_hemisphere(sect_pt, normal);
-        float p = 1 / (2 * M_PI);
+        ray r_new = random_ray_in_hemisphere_constr(*hr.get_sect_coords(), normal);
 
-        //compute brdf
+        //compute brdf;
         float cos_angle = r_new.dir * normal;
-        float brdf = 1 / M_PI;
+        QRgb brdf = div(*hr.get_surface_color(),static_cast <float>(M_PI));
 
         //recursively trace reflected light
-        QRgb incoming = trace_color(r_new, t0, t1, recursion_depth + 1);
+        QRgb incoming = trace_color(r_new, recursion_depth + 1);
 
         //if specular reflection is used, recurse call
-        if(hr.is_specular() && recursion_depth < max_recursion_depth){
-            vec3f n = *hr.get_normal();
-            vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
-            ray r_(*hr.get_sect_coords(), dir_);
-            return trace_color(r_, eps, max_dist, recursion_depth+1);
-        }
+//        if(hr.is_specular() && recursion_depth < max_recursion_depth){
+//            vec3f n = *hr.get_normal();
+//            vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
+//            ray r_(*hr.get_sect_coords(), dir_);
+//            return trace_color(r_, recursion_depth+1);
+//        }
 
         //apply rendering eq
 
-        return add(*hr.get_emittence(), brdf * mult(incoming, *hr.get_surface_color()) * cos_angle / p);
+        return add(*hr.get_emittence(), mult(mult(brdf, incoming),  cos_angle / p_diffuse));
 
     }
 
@@ -172,7 +176,7 @@ QRgb view::trace_color(ray r, float t0, float t1, int recursion_depth){
 
 }
 
-ray random_ray_in_hemisphere(const vec3f &origin, const vec3f &normal){
+ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal){
     //returns random ray in hemisphere of origin
 
     //random numbers between 0-1 and 1
@@ -190,7 +194,20 @@ ray random_ray_in_hemisphere(const vec3f &origin, const vec3f &normal){
     z /= radius;
 
     //check if dir has the correct orientation
-    dir = vec3f(x-origin.x,y-origin.y,z-origin.z);
+    dir = vec3f(x,y,z);
+    if(dir * normal > 0)
+        return ray(origin, dir);
+    else
+        return ray(origin, -dir);
+}
+
+ray random_ray_in_hemisphere_constr(const vec3f &origin, const vec3f &normal){
+    //random numbers between 0-1 and 1
+    float theta, phi;
+    vec3f dir;
+    phi = randf(2*M_PI*1000)/1000;
+    theta = randf(M_PI*1000)/1000;
+    dir = vec3f(std::sin(theta) * std::cos(phi), std::sin(theta) * std::sin(phi), std::cos(theta));
     if(dir * normal > 0)
         return ray(origin, dir);
     else

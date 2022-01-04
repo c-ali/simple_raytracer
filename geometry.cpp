@@ -16,6 +16,8 @@ sphere::sphere(vec3f center, float radius) : center(center), radius(radius){};
 
 sphere::sphere(vec3f center, float radius, QRgb color) : center(center), radius(radius){this->color = color;};
 
+sphere::sphere(vec3f center, float radius, QRgb color, QRgb emittence) : center(center), radius(radius){this->color = color; this->emittence = emittence;};
+
 vec3f sphere::get_normal(vec3f sec_pt){
     //unit normal to the surface
     vec3f res = sec_pt - center;
@@ -70,10 +72,13 @@ vec3f sphere::centroid(){
 
 triangle::triangle(vec3f v1, vec3f v2, vec3f v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
 
-triangle::triangle(vec3f v1, vec3f v2, vec3f v3, QRgb color) : v1(v1), v2(v2), v3(v3), has_normals(false){this->color = color;};
-
 triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, vec3f n2, vec3f n3)
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
+
+triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color) : v1(v1), v2(v2), v3(v3), n1(n1), n2(n1), n3(n1), has_normals(false){this->color = color;};
+
+triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color, QRgb emittence) : v1(v1), v2(v2), v3(v3), n1(n1), n2(n1), n3(n1), has_normals(false){this->color = color; this->emittence = emittence;};
+
 
 
 bool triangle::hit(ray r, float t0, float t1, hit_record &rec){

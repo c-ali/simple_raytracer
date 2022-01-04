@@ -37,12 +37,14 @@ public:
     void reset();
     hit_record();
     float get_t();
-    void register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, float emittence);
+    void register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, QRgb emittence);
 };
 
 
 QRgb add(const QRgb &first, const QRgb &second);
 QRgb mult(const QRgb &first, const QRgb &second);
-
+QRgb mult(const QRgb &first, const float scalar);
+QRgb div(const QRgb &first, const QRgb &second);
+QRgb div(const QRgb &first, const float scalar);
 
 #endif // UTIL_H

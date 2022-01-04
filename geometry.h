@@ -23,7 +23,7 @@ public:
     virtual box bounding_box() = 0;
     virtual vec3f centroid() = 0;
     void set_color(QRgb color);
-    float emittence = 0; //only set emittence non-zero for path-tracing
+    QRgb emittence = qRgb(0,0,0); //only set emittence non-zero for path-tracing
 };
 
 class sphere : public surface {
@@ -34,6 +34,7 @@ private:
 public:
     sphere(vec3f center, float radius);
     sphere(vec3f center, float radius, QRgb color);
+    sphere(vec3f center, float radius, QRgb color, QRgb emittence);
     box bounding_box() override;
     virtual vec3f centroid() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;
@@ -48,7 +49,8 @@ private:
 public:
     triangle(vec3f v1,vec3f v2,vec3f v3,vec3f n1,vec3f n2,vec3f n3);
     triangle(vec3f v1,vec3f v2,vec3f v3);
-    triangle(vec3f v1, vec3f v2, vec3f v3, QRgb color);
+    triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color);
+    triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color, QRgb emittence);
     box bounding_box() override;
     virtual vec3f centroid() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;

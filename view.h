@@ -8,6 +8,8 @@
 #include "algebra.h"
 #include "geometry.h"
 #include "shading.h"
+#include <math.h>
+
 
 extern int hit_count;
 
@@ -20,6 +22,8 @@ public:
     int samples_per_ray = 1;
     bool path_tracing = false;
     int max_recursion_depth = 5;
+    bool shadows = true;
+    bool anti_alias = false;
 
 private:
     int img_width, img_height;
@@ -27,28 +31,30 @@ private:
     mesh msh;
     float viewing_dst;
     std::vector<vec3f> light_srcs;
-    bool shadows = true;
     std::vector<float> light_intensites;
 
-    vec3f u = vec3f(1,0,0); //right
-    vec3f v = vec3f(0,-1,0); //up
+    const vec3f u = vec3f(1,0,0); //right
+    const vec3f v = vec3f(0,-1,0); //up
     vec3f w = vec3f(0,0,1); //-viewing_dir
-    float eps = 1e-3;
-    float max_dist = 1e30;
+    const float eps = 1e-3;
+    const float max_dist = 1e30;
 
     const char MODE = 'p'; // p = perspectivic; o = orthographic
 
-    QRgb background_color = qRgb(255,255,255); //background color
+    QRgb background_color = qRgb(0,0,0); //background color
     std::shared_ptr<shader> shdr;
 
+    const float p_diffuse =  1 / (2 * M_PI);
     QRgb ray_color(ray r, float t0, float t1, int recursion_depth);
-    QRgb trace_color(ray r, float t0, float t1, int recursion_depth);
+    QRgb trace_color(ray r, int recursion_depth);
 public:
     QImage render();
     view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh, float viewing_dst, std::vector<vec3f> light_srcs, std::vector<float> light_intensites);
 };
 
-ray random_ray_in_hemisphere(const vec3f &origin, const vec3f &normal);
+
+ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal);
+ray random_ray_in_hemisphere_constr(const vec3f &origin, const vec3f &normal);
 
 
 #endif // VIEW_H
