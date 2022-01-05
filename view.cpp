@@ -11,6 +11,8 @@ view::view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh
     img_width(width), img_height(height), viewer_pos(viewer_pos), w(viewing_dir.normalized()), msh(msh), viewing_dst(viewing_dst), light_srcs(light_srcs), light_intensites(light_intensites){
     //initialize random seed
     srand (static_cast <unsigned> (time(0)));
+    //initialize shader
+    shdr = std::make_shared<phong_shader>(light_srcs, viewer_pos, light_intensites);
 }
 
 float randf(float scale){
@@ -20,14 +22,14 @@ float randf(float scale){
 
 QImage view::render(){
     int hit_count = 0;
-    shdr = std::make_shared<phong_shader>(light_srcs, viewer_pos, light_intensites);
-    //lamb_shader s = lamb_shader(light_srcs, viewer_pos, light_intensites);
     std::list<std::future<void>> futures;
-    img = QImage(img_width, img_height, QImage::Format_RGB16);
+    img = QImage(img_width, img_height, QImage::Format_RGB32);
     //loop over pixels
     for(int i = 0; i < img_height; ++i){
         //progress
-           futures.push_back(std::async(std::launch::async, &view::compute_line, std::ref(*this), i));
+//           futures.push_back(std::async(std::launch::async, &view::compute_line, std::ref(*this), i));
+             std::async(std::launch::async, &view::compute_line, std::ref(*this), i);
+
     }
 
     //wait for all threads
@@ -41,9 +43,8 @@ QImage view::render(){
 void view::compute_line(int i){
     for(int j = 0; j < img_width; ++j){
         float u_offset, v_offset;
-        float red_sum = 0, blue_sum = 0, green_sum = 0;
         vec3f ray_direction, ray_origin;
-        QRgb col;
+        vec3f sum(0,0,0);
         for(int k = 0; k < samples_per_ray; k++){
             //compute pixel coordinates. jitter if necessary
             if(anti_alias){
@@ -84,22 +85,20 @@ void view::compute_line(int i){
             ray light_ray = ray(ray_origin, ray_direction);
 
             if(!path_tracing)
-                col = ray_color(light_ray, eps, max_dist, 0);
+                sum = sum + ray_color(light_ray, eps, max_dist, 0);
             else
-                col = trace_color(light_ray, 0);
-
-            red_sum += qRed(col);
-            green_sum += qGreen(col);
-            blue_sum += qBlue(col);
+                sum = sum + trace_color(light_ray, 0);
         }
-        img.setPixel(i,j, qRgb(red_sum / samples_per_ray, green_sum / samples_per_ray, blue_sum / samples_per_ray));
+        sum = sum / samples_per_ray;
+        sum = sum / 10;
+        img.setPixel(i,j, qRgb(sum[0], sum[1], sum[2]));
     }
 }
 
-QRgb view::ray_color(ray r, float t0, float t1, int recursion_depth){
+vec3f view::ray_color(ray r, float t0, float t1, int recursion_depth){
     //use regular raytracing to determine the color of a pixel
 
-    QRgb color = background_color;
+    vec3f color = background_color;
 
     hit_record hr = hit_record(); //view hit record
     hit_record sr = hit_record(); //shadow record
@@ -128,8 +127,6 @@ QRgb view::ray_color(ray r, float t0, float t1, int recursion_depth){
             ray r_(*hr.get_sect_coords(), dir_);
             return ray_color(r_, eps, max_dist, recursion_depth+1);
         }
-
-
     }
 
     return color;
@@ -137,11 +134,11 @@ QRgb view::ray_color(ray r, float t0, float t1, int recursion_depth){
 }
 
 
-QRgb view::trace_color(ray r, int recursion_depth){
+vec3f view::trace_color(ray r, int recursion_depth){
     //use path_tracing to determine the color of a pixel
     //supports only diffuse surfaces for now
 
-    QRgb color = background_color;
+    vec3f color = background_color;
     hit_record hr = hit_record(); //view hit record
 
     //check if ray hits any object
@@ -153,10 +150,10 @@ QRgb view::trace_color(ray r, int recursion_depth){
 
         //compute brdf;
         float cos_angle = r_new.dir * normal;
-        QRgb brdf = div(*hr.get_surface_color(),static_cast <float>(M_PI));
+        vec3f brdf = vec3f(*hr.get_surface_color()) / M_PI;
 
         //recursively trace reflected light
-        QRgb incoming = trace_color(r_new, recursion_depth + 1);
+        vec3f incoming = trace_color(r_new, recursion_depth + 1);
 
         //if specular reflection is used, recurse call
 //        if(hr.is_specular() && recursion_depth < max_recursion_depth){
@@ -167,8 +164,7 @@ QRgb view::trace_color(ray r, int recursion_depth){
 //        }
 
         //apply rendering eq
-
-        return add(*hr.get_emittence(), mult(mult(brdf, incoming),  cos_angle / p_diffuse));
+        return vec3f(*hr.get_emittence()) + (pt_mult(brdf, incoming) *  (cos_angle / p_diffuse));
 
     }
 

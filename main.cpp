@@ -126,12 +126,12 @@ QImage cornell_box(){
     QRgb grey = qRgb(100,100,100);
 
     //left wall
-    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0), vec3f(-10,10,0), vec3f(-10,0,-10), vec3f(1,0,0),red, red));
-    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,-10),vec3f(-10,10,0), vec3f(-10,10,-10), vec3f(1,0,0), red, red));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0), vec3f(-10,10,0), vec3f(-10,0,-10), vec3f(1,0,0), red));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,-10), vec3f(-10,10,0), vec3f(-10,10,-10), vec3f(1,0,0), red));
 
     //right wall
-    msh.add_surface(std::make_shared<triangle>( vec3f(10,10,0), vec3f(10,0,0), vec3f(10,0,-10), vec3f(-1,0,0), blue, blue));
-    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(10,0,-10), vec3f(10,10,-10), vec3f(-1,0,0), blue, blue));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(10,0,0), vec3f(10,0,-10), vec3f(-1,0,0), blue));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(10,0,-10), vec3f(10,10,-10), vec3f(-1,0,0), blue));
 
 
     //back wall
@@ -143,12 +143,12 @@ QImage cornell_box(){
     msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(-10,0,0), vec3f(10,0,0), vec3f(0,0,-1), white));
 
     //ceiling
-    msh.add_surface(std::make_shared<triangle>( vec3f(10,10,0), vec3f(-10,10,0), vec3f(10,10,-10), vec3f(0,-1,0), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(-10,10,0), vec3f(10,10,-10), vec3f(0,-1,0), white));
     msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,10,0), vec3f(-10,10,-10), vec3f(0,-1,0), white));
 
     //floor
-    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,0), vec3f(10,0,0), vec3f(10,0,-10),vec3f(0,1,0), white));
-    msh.add_surface(std::make_shared<triangle>( vec3f(-10,0,0), vec3f(10,0,-10), vec3f(-10,0,-10),vec3f(0,1,0), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0), vec3f(10,0,0), vec3f(10,0,-10),vec3f(0,1,0), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0), vec3f(10,0,-10), vec3f(-10,0,-10),vec3f(0,1,0), white));
 
     //add spheres
     //msh.add_surface(std::make_shared<sphere>(vec3f(6,1,-8), 2, white));
@@ -162,9 +162,9 @@ QImage cornell_box(){
     std::vector<float> intensities;
     intensities.push_back(1);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
-    v.samples_per_ray = 1;
+    v.samples_per_ray = 10;
     v.max_recursion_depth = 5;
-    v.path_tracing = false;
+    v.path_tracing = true;
     v.shadows = false;
     return v.render();
 }
@@ -173,11 +173,11 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QPixmap image;
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     //QImage img = focal_scene();
     QImage img = cornell_box();
     //QImage img = mirror_scene();
     img.save("rendered.png");
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     image = QPixmap::fromImage(img);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;

@@ -75,9 +75,9 @@ triangle::triangle(vec3f v1, vec3f v2, vec3f v3) : v1(v1), v2(v2), v3(v3), has_n
 triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, vec3f n2, vec3f n3)
     : v1(v1), v2(v2), v3(v3), n1(n1), n2(n2), n3(n3), has_normals(true){}
 
-triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color) : v1(v1), v2(v2), v3(v3), n1(n1), n2(n1), n3(n1), has_normals(false){this->color = color;};
+triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color) : v1(v1), v2(v2), v3(v3), n1(n1), n2(n1), n3(n1), has_normals(true){this->color = color;};
 
-triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color, QRgb emittence) : v1(v1), v2(v2), v3(v3), n1(n1), n2(n1), n3(n1), has_normals(false){this->color = color; this->emittence = emittence;};
+triangle::triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color, QRgb emittence) : v1(v1), v2(v2), v3(v3), n1(n1), n2(n1), n3(n1), has_normals(true){this->color = color; this->emittence = emittence;};
 
 
 

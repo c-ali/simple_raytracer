@@ -26,12 +26,12 @@ void shader::add_ambient(){
 }
 
 void shader::apply_bounds(){
-    ored = std::min(255,ored);
-    oblue = std::min(255,oblue);
-    ogreen = std::min(255,ogreen);
+    ored = std::fmin(255,ored);
+    oblue = std::fmin(255,oblue);
+    ogreen = std::fmin(255,ogreen);
 }
 
-QRgb shader::shade(hit_record &hr, std::vector<bool> in_shadow){
+vec3f shader::shade(hit_record &hr, std::vector<bool> in_shadow){
     initialize();
     fetch_surface_color(hr);
     add_ambient();
@@ -53,7 +53,7 @@ QRgb shader::shade(hit_record &hr, std::vector<bool> in_shadow){
     //check bounds
     apply_bounds();
 
-    return qRgb(ored, ogreen, oblue);
+    return vec3f(ored, ogreen, oblue);
 }
 
 void lamb_shader::apply_shading(vec3f normal, vec3f light_incidence, vec3f sect_coords, int light_src_idx){

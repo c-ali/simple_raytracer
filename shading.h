@@ -13,14 +13,14 @@ protected:
     vec3f viewer_pos;
     float ambient_intensity;
     int sred, sgreen, sblue; //surface color RGB values
-    int ored, ogreen, oblue; //output rgb values
+    float ored, ogreen, oblue; //output rgb values
     void fetch_surface_color(hit_record &hr);
     void initialize(); //resets output values
     void add_ambient(); //adds ambient shading
     void apply_bounds(); //makes sure rgb values are not over 255
     virtual void apply_shading(vec3f normal, vec3f light_incidence, vec3f sect_coords, int light_src_idx) = 0;
 public:
-    QRgb shade(hit_record &hr, std::vector<bool> in_shadow);
+    vec3f shade(hit_record &hr, std::vector<bool> in_shadow);
     shader(std::vector<vec3f> light_srcs, vec3f viewer_pos, std::vector<float> light_intensites, float ambient_intensity);
 };
 
