@@ -17,13 +17,23 @@ extern int hit_count;
 class view
 {
 public:
-    float focal_dist = -1; //DOF dist. Use -1 to turn off DOF
-    float aperture = 0.01; //DOF aperture
+    //DOF options
+    float focal_dist = -1; //Use -1 to turn off DOF
+    float aperture = 0.01;
+
+    //distributed raytracing options
     int samples_per_ray = 1;
+    bool anti_alias = false;
+
+    //path tracing options
     bool path_tracing = false;
     int max_recursion_depth = 5;
+
+    //multithreading options
+    bool multithreading = true;
+    int num_threads = 15;
     bool shadows = true;
-    bool anti_alias = false;
+
 
 private:
     QImage img;
@@ -48,7 +58,7 @@ private:
     const float p_diffuse =  1 / (2 * M_PI);
     vec3f ray_color(ray r, float t0, float t1, int recursion_depth);
     vec3f trace_color(ray r, int recursion_depth);
-    void compute_line(int i);
+    void compute_lines(int j_start, int j_end);
 public:
     QImage render();
     view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh, float viewing_dst, std::vector<vec3f> light_srcs, std::vector<float> light_intensites);

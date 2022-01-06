@@ -113,8 +113,8 @@ QImage view_mesh(){
 }
 
 QImage cornell_box(){
-    int width = 250;
-    int height = 250;
+    int width = 500;
+    int height = 500;
     float viewing_dst = 0.38;
     vec3f w = vec3f(0,0,1);
     mesh msh = mesh();
@@ -123,7 +123,7 @@ QImage cornell_box(){
     QRgb green = qRgb(0,255,0);
     QRgb blue = qRgb(0,0,255);
     QRgb white = qRgb(255,255,255);
-    QRgb grey = qRgb(100,100,100);
+    QRgb grey = qRgb(200,200,200);
 
     //left wall
     msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0), vec3f(-10,10,0), vec3f(-10,0,-10), vec3f(1,0,0), red));
@@ -155,17 +155,18 @@ QImage cornell_box(){
     //msh.add_surface(std::make_shared<sphere>(vec3f(-6,1,-8), 2, white));
 
     //add light
-    msh.add_surface(std::make_shared<sphere>(vec3f(0,10,-7), 5, white, white));
+    msh.add_surface(std::make_shared<sphere>(vec3f(0,10,-7), 3, white, white));
 
     std::vector<vec3f> lamps;
     lamps.push_back(vec3f(0,3,-5));
     std::vector<float> intensities;
     intensities.push_back(1);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
-    v.samples_per_ray = 1;
+    v.samples_per_ray = 10;
     v.max_recursion_depth = 5;
     v.path_tracing = false;
     v.shadows = false;
+    v.num_threads = 100;
     return v.render();
 }
 
