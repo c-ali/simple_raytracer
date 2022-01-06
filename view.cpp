@@ -90,7 +90,7 @@ void view::compute_line(int j){
                 sum = sum + trace_color(light_ray, 0);
         }
         sum = sum / samples_per_ray;
-        sum = sum * 200;
+//        sum = sum * 200;
         sum = sum.bounded();
         //go to correct pixel and write with scanline
         pix++;

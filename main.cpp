@@ -162,9 +162,9 @@ QImage cornell_box(){
     std::vector<float> intensities;
     intensities.push_back(1);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
-    v.samples_per_ray = 500;
+    v.samples_per_ray = 1;
     v.max_recursion_depth = 5;
-    v.path_tracing = true;
+    v.path_tracing = false;
     v.shadows = false;
     return v.render();
 }
