@@ -164,7 +164,7 @@ QImage cornell_box(){
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
     v.samples_per_ray = 10;
     v.max_recursion_depth = 5;
-    v.path_tracing = true;
+    v.path_tracing = false;
     v.shadows = false;
     return v.render();
 }

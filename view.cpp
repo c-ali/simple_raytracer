@@ -25,10 +25,10 @@ QImage view::render(){
     std::list<std::future<void>> futures;
     img = QImage(img_width, img_height, QImage::Format_RGB32);
     //loop over pixels
-    for(int i = 0; i < img_height; ++i){
+    for(int j = 0; j < img_width; ++j){
         //progress
-//           futures.push_back(std::async(std::launch::async, &view::compute_line, std::ref(*this), i));
-             std::async(std::launch::async, &view::compute_line, std::ref(*this), i);
+           futures.push_back(std::async(std::launch::async, &view::compute_line, std::ref(*this), j));
+//             std::async(std::launch::async, &view::compute_line, std::ref(*this), i);
 
     }
 
@@ -40,8 +40,9 @@ QImage view::render(){
     return img;
 }
 
-void view::compute_line(int i){
-    for(int j = 0; j < img_width; ++j){
+void view::compute_line(int j){
+    QRgb *pix = (QRgb*) img.scanLine(j) ;
+    for(int i = 0; i < img_height; ++i){
         float u_offset, v_offset;
         vec3f ray_direction, ray_origin;
         vec3f sum(0,0,0);
@@ -89,9 +90,9 @@ void view::compute_line(int i){
             else
                 sum = sum + trace_color(light_ray, 0);
         }
+        pix++;
         sum = sum / samples_per_ray;
-        sum = sum / 10;
-        img.setPixel(i,j, qRgb(sum[0], sum[1], sum[2]));
+        *pix = qRgb(sum[0], sum[1], sum[2]);
     }
 }
 
