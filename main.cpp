@@ -113,8 +113,8 @@ QImage view_mesh(){
 }
 
 QImage cornell_box(){
-    int width = 500;
-    int height = 500;
+    int width = 250;
+    int height = 250;
     float viewing_dst = 0.38;
     vec3f w = vec3f(0,0,1);
     mesh msh = mesh();
@@ -135,8 +135,8 @@ QImage cornell_box(){
 
 
     //back wall
-    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,-10),vec3f(10,10,-10), vec3f(-10,10,-10), vec3f(0,0,1), grey));
-    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,0,-10), vec3f(10,0,-10), vec3f(0,0,1), grey));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,-10),vec3f(10,10,-10), vec3f(-10,10,-10), vec3f(0,0,1), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,0,-10), vec3f(10,0,-10), vec3f(0,0,1), white));
 
     //front wall
     msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0),vec3f(10,10,0), vec3f(-10,10,0),vec3f(0,0,-1), white));
@@ -155,16 +155,16 @@ QImage cornell_box(){
     //msh.add_surface(std::make_shared<sphere>(vec3f(-6,1,-8), 2, white));
 
     //add light
-    msh.add_surface(std::make_shared<sphere>(vec3f(0,10,-7), 3, white, white));
+    msh.add_surface(std::make_shared<sphere>(vec3f(0,10,-7), 5, white, white));
 
     std::vector<vec3f> lamps;
-    lamps.push_back(vec3f(0,5,-5));
+    lamps.push_back(vec3f(0,3,-5));
     std::vector<float> intensities;
     intensities.push_back(1);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
-    v.samples_per_ray = 10;
+    v.samples_per_ray = 500;
     v.max_recursion_depth = 5;
-    v.path_tracing = false;
+    v.path_tracing = true;
     v.shadows = false;
     return v.render();
 }

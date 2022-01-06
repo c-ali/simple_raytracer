@@ -5,7 +5,7 @@ vec3f::vec3f(float x, float y, float z) : x(x), y(y), z(z){};
 
 vec3f::vec3f() : x(1),y(1), z(1) {};
 
-vec3f::vec3f(QRgb col) : x(qRed(col)),y(qGreen(col)), z(qBlue(col)) {};
+vec3f::vec3f(QRgb col) : x(qRed(col)/255),y(qGreen(col)/255), z(qBlue(col)/255) {};
 
 vec3f vec3f::operator-(){
     vec3f res(-x, -y, -z);
@@ -19,6 +19,10 @@ float vec3f::norm() const{
 vec3f vec3f::normalized() const{
     float n = norm();
     return vec3f(x/n, y/n, z/n);
+}
+
+vec3f vec3f::bounded() const{
+    return vec3f(std::fmin(x,255), std::fmin(y,255), std::fmin(z, 255));
 }
 
 vec3f operator+(const vec3f &first, const vec3f &second){

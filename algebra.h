@@ -17,6 +17,7 @@ public:
     float norm() const; //returns norm
     vec3f normalized() const; //returns normalized vector
     float operator[](size_t idx);
+    vec3f bounded() const; //returns 255-bounded vector
 };
 
 vec3f operator-(const vec3f &first, const vec3f &second);

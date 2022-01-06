@@ -22,20 +22,19 @@ float randf(float scale){
 
 QImage view::render(){
     int hit_count = 0;
-    std::list<std::future<void>> futures;
+    std::vector<std::future<void>> futures;
     img = QImage(img_width, img_height, QImage::Format_RGB32);
     //loop over pixels
     for(int j = 0; j < img_width; ++j){
-        //progress
-           futures.push_back(std::async(std::launch::async, &view::compute_line, std::ref(*this), j));
-//             std::async(std::launch::async, &view::compute_line, std::ref(*this), i);
-
+//        progress
+//           threads[j] = std::thread(&view::compute_line, std::ref(*this), j);
+             futures.push_back(std::move(std::async(std::launch::async, &view::compute_line, std::ref(*this), j)));
+//             compute_line(j);
     }
 
     //wait for all threads
-    for(int i = 0; i < futures.size(); ++i){
-        futures.back().wait();
-        futures.pop_back();
+    for(int j = 0; j < futures.size(); ++j){
+        futures[j].wait();
     }
     return img;
 }
@@ -90,8 +89,11 @@ void view::compute_line(int j){
             else
                 sum = sum + trace_color(light_ray, 0);
         }
-        pix++;
         sum = sum / samples_per_ray;
+        sum = sum * 200;
+        sum = sum.bounded();
+        //go to correct pixel and write with scanline
+        pix++;
         *pix = qRgb(sum[0], sum[1], sum[2]);
     }
 }
@@ -147,11 +149,12 @@ vec3f view::trace_color(ray r, int recursion_depth){
         vec3f normal = *hr.get_normal();
 
         //cast new ray in hemisphere with correct probability
-        ray r_new = random_ray_in_hemisphere_constr(*hr.get_sect_coords(), normal);
+        ray r_new = random_ray_in_hemisphere_reject (*hr.get_sect_coords(), normal);
 
         //compute brdf;
         float cos_angle = r_new.dir * normal;
         vec3f brdf = vec3f(*hr.get_surface_color()) / M_PI;
+        vec3f emittence(*hr.get_emittence());
 
         //recursively trace reflected light
         vec3f incoming = trace_color(r_new, recursion_depth + 1);
@@ -165,8 +168,7 @@ vec3f view::trace_color(ray r, int recursion_depth){
 //        }
 
         //apply rendering eq
-        return vec3f(*hr.get_emittence()) + (pt_mult(brdf, incoming) *  (cos_angle / p_diffuse));
-
+        color = emittence + (pt_mult(brdf, incoming) *  (cos_angle / p_diffuse));
     }
 
     //if there is no hit or max recursion depth is reached return bgc
