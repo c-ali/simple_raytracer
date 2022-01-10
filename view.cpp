@@ -27,14 +27,12 @@ QImage view::render(){
     img = QImage(img_width, img_height, QImage::Format_RGB32);
     //loop over pixels
     for(int j = 0; j < num_threads; ++j){
-        if(multithreading){
-            if(j == num_threads-1)
-                futures.push_back(std::move(std::async(std::launch::async, &view::compute_lines, std::ref(*this), j*thread_len, img_width)));
-            else
-                futures.push_back(std::move(std::async(std::launch::async, &view::compute_lines, std::ref(*this), j*thread_len, (j+1)*thread_len)));
-        }
+        int start = j*thread_len;
+        int end = (j < num_threads - 1) ? (j+1)*thread_len : img_width;
+        if(multithreading)
+                futures.push_back(std::move(std::async(std::launch::async, &view::compute_lines, std::ref(*this), start, end)));
         else
-            compute_lines(j, j+1);
+            compute_lines(start, end);
     }
 
     //wait for all threads
