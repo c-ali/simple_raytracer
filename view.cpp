@@ -170,12 +170,12 @@ vec3f view::trace_color(ray r, int recursion_depth){
         vec3f incoming = trace_color(r_new, recursion_depth + 1);
 
         //if specular reflection is used, recurse call
-//        if(hr.is_specular() && recursion_depth < max_recursion_depth){
-//            vec3f n = *hr.get_normal();
-//            vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
-//            ray r_(*hr.get_sect_coords(), dir_);
-//            return trace_color(r_, recursion_depth+1);
-//        }
+        if(hr.is_specular() && recursion_depth < max_recursion_depth){
+            vec3f n = *hr.get_normal();
+            vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
+            ray r_(*hr.get_sect_coords(), dir_);
+            return trace_color(r_, recursion_depth+1);
+        }
 
         //apply rendering eq
         color = emittence + (pt_mult(brdf, incoming) *  (cos_angle / p_diffuse));
