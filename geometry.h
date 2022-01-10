@@ -22,6 +22,7 @@ public:
     virtual bool hit(ray r, float t0, float t1, hit_record &rec) = 0;
     virtual box bounding_box() = 0;
     virtual vec3f centroid() = 0;
+    virtual vec3f random_surface_pt() = 0;
     void set_color(QRgb color);
     QRgb emittence = qRgb(0,0,0); //only set emittence non-zero for path-tracing
 };
@@ -37,6 +38,7 @@ public:
     sphere(vec3f center, float radius, QRgb color, QRgb emittence);
     box bounding_box() override;
     virtual vec3f centroid() override;
+    vec3f random_surface_pt() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;
 };
 
@@ -53,6 +55,7 @@ public:
     triangle(vec3f v1, vec3f v2, vec3f v3, vec3f n1, QRgb color, QRgb emittence);
     box bounding_box() override;
     virtual vec3f centroid() override;
+    vec3f random_surface_pt() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;
 };
 
@@ -63,6 +66,7 @@ public:
     checkerboard(float height);
     box bounding_box() override;
     virtual vec3f centroid() override;
+    vec3f random_surface_pt() override;
     bool hit(ray r, float t0, float t1, hit_record &rec) override;
 };
 
@@ -81,7 +85,7 @@ public:
     box bbox;
     box bounding_box();
     int size();
-    std::vector<std::shared_ptr<surface>> faces;
+    std::vector<std::shared_ptr<surface>> faces, emitting_faces;
     void add_surface(std::shared_ptr<surface> new_surface);
     void build_basic_tree(int min_node_size, int max_depth);
     void build_fast_tree(int min_node_size, int max_depth);

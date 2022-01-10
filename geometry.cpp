@@ -5,6 +5,7 @@
 #include <sstream>
 #include "geometry.h"
 #include "data_structures.h"
+#include "view.h"
 
 using std::make_shared, std::min, std::max;
 int hit_count;
@@ -66,8 +67,25 @@ vec3f triangle::centroid(){
     return (v1+v2+v3)/3;
 }
 
+vec3f triangle::random_surface_pt()
+{
+    vec3f v = v3 - v1;
+    vec3f v_ = v2 - v1;
+    return v1 + randf(1) * v + randf(1) * v_;
+}
+
 vec3f sphere::centroid(){
     return center;
+}
+
+vec3f sphere::random_surface_pt(){
+    //sample random point on the sphere
+    float x, y, z, radius;
+    x = randf(2)-1;
+    z = randf(2)-1;
+    y = randf(2)-1;
+    radius = std::sqrt(x*x+y*y+z*z);
+    return vec3f(x / radius, y / radius, z / radius);
 }
 
 triangle::triangle(vec3f v1, vec3f v2, vec3f v3) : v1(v1), v2(v2), v3(v3), has_normals(false){}
@@ -155,6 +173,11 @@ box checkerboard::bounding_box()
 vec3f checkerboard::centroid()
 {
     return vec3f(0,height,0);
+}
+
+vec3f checkerboard::random_surface_pt()
+{
+     throw std::invalid_argument( "Checkerboard cannot be emitting" );
 }
 
 bool checkerboard::hit(ray r, float t0, float t1, hit_record &rec)
@@ -317,6 +340,7 @@ void mesh::read_obj(const char* path){
         }
         //check for faces. only works for 3d faces
         if(line.substr(0,2) == "f "){
+            std::shared_ptr<triangle> tri;
             if(normals_present){
                 std::string current_block;
                 std::vector<int> idxs;
@@ -332,12 +356,12 @@ void mesh::read_obj(const char* path){
                 }
                 if(idxs.size() > 6)
                     //case has textures, ignore for now
-                    faces.push_back(make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[3])), vec3f(get_vertex(idxs[6])),
-                                                          vec3f(get_normal(idxs[2])), vec3f(get_normal(idxs[5])), vec3f(get_normal(idxs[8]))));
+                    tri = make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[3])), vec3f(get_vertex(idxs[6])),
+                                                          vec3f(get_normal(idxs[2])), vec3f(get_normal(idxs[5])), vec3f(get_normal(idxs[8])));
                 else
                     //case has no textures but normals
-                    faces.push_back(make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[2])), vec3f(get_vertex(idxs[4])),
-                                                      vec3f(get_normal(idxs[1])), vec3f(get_normal(idxs[3])), vec3f(get_normal(idxs[5]))));
+                    tri = make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[2])), vec3f(get_vertex(idxs[4])),
+                                                      vec3f(get_normal(idxs[1])), vec3f(get_normal(idxs[3])), vec3f(get_normal(idxs[5])));
             }
             else{
                 //case has only vertices
@@ -348,7 +372,11 @@ void mesh::read_obj(const char* path){
                     idxs.push_back(v_idx);
                 }
 
-                faces.push_back(make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[1])), vec3f(get_vertex(idxs[2]))));
+                tri = make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[1])), vec3f(get_vertex(idxs[2])));
+            }
+            faces.push_back(tri);
+            if(tri->emittence > 0){
+                emitting_faces.push_back(tri);
             }
         }
     }

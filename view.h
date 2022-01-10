@@ -27,16 +27,16 @@ public:
 
     //path tracing options
     bool path_tracing = false;
-    int max_recursion_depth = 5;
-    float lighting_fac = 400;
-    float roulette_prob = 0.7;
+    float lighting_fac = 300;
+    float roulette_prob = 1;
+    bool next_event = false;
 
     //multithreading options
-    bool multithreading = true;
     int num_threads = 15;
     bool shadows = true;
 
-
+    //general raytracing options
+    int max_recursion_depth = 5;
 private:
     QImage img;
     int img_width, img_height;
@@ -59,7 +59,7 @@ private:
 
     const float p_diffuse =  1 / (2 * M_PI);
     vec3f ray_color(ray r, float t0, float t1, int recursion_depth);
-    vec3f trace_color(ray r);
+    vec3f trace_color(ray r, int recursion_depth);
     void compute_lines(int j_start, int j_end);
 public:
     QImage render();
@@ -69,6 +69,7 @@ public:
 
 ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal);
 ray random_ray_in_hemisphere_constr(const vec3f &origin, const vec3f &normal);
+float randf(float scale);
 
 
 #endif // VIEW_H

@@ -29,14 +29,14 @@ QImage view::render(){
     for(int j = 0; j < num_threads; ++j){
         int start = j*thread_len;
         int end = (j < num_threads - 1) ? (j+1)*thread_len : img_width;
-        if(multithreading)
+        if(num_threads > 1)
                 futures.push_back(std::move(std::async(std::launch::async, &view::compute_lines, std::ref(*this), start, end)));
         else
             compute_lines(start, end);
     }
 
     //wait for all threads
-    for(int j = 0; j < futures.size(); ++j){
+    for(size_t j = 0; j < futures.size(); ++j){
         futures[j].wait();
     }
     return img;
@@ -92,7 +92,7 @@ void view::compute_lines(int j_start, int j_end){
                 if(!path_tracing)
                     sum = sum + ray_color(light_ray, eps, max_dist, 0);
                 else
-                    sum = sum + trace_color(light_ray);
+                    sum = sum + trace_color(light_ray, 0);
             }
             sum = sum / samples_per_ray;
 
@@ -147,7 +147,7 @@ vec3f view::ray_color(ray r, float t0, float t1, int recursion_depth){
 }
 
 
-vec3f view::trace_color(ray r){
+vec3f view::trace_color(ray r, int recursion_depth){
     //use path_tracing to determine the color of a pixel
     //supports only diffuse surfaces for now
 
@@ -155,16 +155,16 @@ vec3f view::trace_color(ray r){
     hit_record hr = hit_record(); //view hit record
 
     //check if ray hits any object
-    if(msh.hit(r, eps, max_dist, hr)){
+    if(msh.hit(r, eps, max_dist, hr) && recursion_depth < max_recursion_depth){
         vec3f surf_col(*hr.get_surface_color());
         vec3f emittence(*hr.get_emittence());
 
-        //play russian roulette
-        float termination_prob = std::max(surf_col.x, std::max(surf_col.y, surf_col.z)) * roulette_prob;
-        if(randf(1) > termination_prob)
-            return emittence;
-        else
-            surf_col = surf_col * (1/termination_prob);
+//        //play russian roulette
+//        float termination_prob = std::max(surf_col.x, std::max(surf_col.y, surf_col.z)) * roulette_prob;
+//        if(randf(1) > termination_prob)
+//            return emittence;
+//        else
+//            surf_col = surf_col * (1/termination_prob);
 
         //cast new ray in hemisphere with correct probability
         vec3f normal = *hr.get_normal();
@@ -173,15 +173,29 @@ vec3f view::trace_color(ray r){
         //compute brdf;
         vec3f brdf = surf_col / M_PI;
 
-        //recursively trace reflected light
-        vec3f incoming = trace_color(r_new);
+        vec3f sect_pt(*hr.get_sect_coords());
+        vec3f incoming;
+        if(emittence*vec3f(1,1,1) == 0){
+            //recursively trace reflected light
+            incoming = trace_color(r_new, recursion_depth + 1);
+
+            //next event estimation
+            if(next_event){
+                for(size_t i = 0; i < msh.emitting_faces.size(); ++i){
+                    //send shadow ray
+                    hit_record sr = hit_record();
+                    ray shadow_ray = ray(sect_pt, msh.emitting_faces[i]->random_surface_pt() - sect_pt);
+                    if(msh.emitting_faces[i]->hit(shadow_ray, eps, max_dist, sr))
+                        incoming = (incoming + trace_color(shadow_ray, 0)) / 2;
+                }
+            }
+        }
 
         //if specular reflection is used, recurse call
         if(hr.is_specular()){
-            vec3f n = *hr.get_normal();
-            vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
-            ray r_(*hr.get_sect_coords(), dir_);
-            return trace_color(r_);
+            vec3f dir_ = r.dir - 2 * (r.dir * normal) * normal;
+            ray r_(sect_pt, dir_);
+            return trace_color(r, recursion_depth + 1);
         }
 
         //apply rendering eq
