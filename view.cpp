@@ -92,13 +92,13 @@ void view::compute_lines(int j_start, int j_end){
                 if(!path_tracing)
                     sum = sum + ray_color(light_ray, eps, max_dist, 0);
                 else
-                    sum = sum + trace_color(light_ray, 0);
+                    sum = sum + trace_color(light_ray);
             }
             sum = sum / samples_per_ray;
 
             //adjust numeric range for path tracing
             if(path_tracing)
-                sum = sum * 400;
+                sum = sum * lighting_fac;
 
             sum = sum.bounded();
             //go to correct pixel and write with scanline
@@ -147,7 +147,7 @@ vec3f view::ray_color(ray r, float t0, float t1, int recursion_depth){
 }
 
 
-vec3f view::trace_color(ray r, int recursion_depth){
+vec3f view::trace_color(ray r){
     //use path_tracing to determine the color of a pixel
     //supports only diffuse surfaces for now
 
@@ -155,29 +155,37 @@ vec3f view::trace_color(ray r, int recursion_depth){
     hit_record hr = hit_record(); //view hit record
 
     //check if ray hits any object
-    if(msh.hit(r, eps, max_dist, hr) && recursion_depth <= max_recursion_depth){
-        vec3f normal = *hr.get_normal();
+    if(msh.hit(r, eps, max_dist, hr)){
+        vec3f surf_col(*hr.get_surface_color());
+        vec3f emittence(*hr.get_emittence());
+
+        //play russian roulette
+        float termination_prob = std::max(surf_col.x, std::max(surf_col.y, surf_col.z)) * roulette_prob;
+        if(randf(1) > termination_prob)
+            return emittence;
+        else
+            surf_col = surf_col * (1/termination_prob);
 
         //cast new ray in hemisphere with correct probability
+        vec3f normal = *hr.get_normal();
         ray r_new = random_ray_in_hemisphere_reject (*hr.get_sect_coords(), normal);
 
         //compute brdf;
-        float cos_angle = r_new.dir * normal;
-        vec3f brdf = vec3f(*hr.get_surface_color()) / M_PI;
-        vec3f emittence(*hr.get_emittence());
+        vec3f brdf = surf_col / M_PI;
 
         //recursively trace reflected light
-        vec3f incoming = trace_color(r_new, recursion_depth + 1);
+        vec3f incoming = trace_color(r_new);
 
         //if specular reflection is used, recurse call
-        if(hr.is_specular() && recursion_depth < max_recursion_depth){
+        if(hr.is_specular()){
             vec3f n = *hr.get_normal();
             vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
             ray r_(*hr.get_sect_coords(), dir_);
-            return trace_color(r_, recursion_depth+1);
+            return trace_color(r_);
         }
 
         //apply rendering eq
+        float cos_angle = r_new.dir * normal;
         color = emittence + (pt_mult(brdf, incoming) *  (cos_angle / p_diffuse));
     }
 

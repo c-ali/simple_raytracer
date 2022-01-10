@@ -28,6 +28,8 @@ public:
     //path tracing options
     bool path_tracing = false;
     int max_recursion_depth = 5;
+    float lighting_fac = 400;
+    float roulette_prob = 0.7;
 
     //multithreading options
     bool multithreading = true;
@@ -57,7 +59,7 @@ private:
 
     const float p_diffuse =  1 / (2 * M_PI);
     vec3f ray_color(ray r, float t0, float t1, int recursion_depth);
-    vec3f trace_color(ray r, int recursion_depth);
+    vec3f trace_color(ray r);
     void compute_lines(int j_start, int j_end);
 public:
     QImage render();

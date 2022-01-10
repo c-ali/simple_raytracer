@@ -151,9 +151,9 @@ QImage cornell_box(){
     msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0), vec3f(10,0,-10), vec3f(-10,0,-10),vec3f(0,1,0), white));
 
     //add spheres
-    std::shared_ptr<surface> sph = std::make_shared<sphere>(vec3f(6,1,-8), 2, white);
+    std::shared_ptr<surface> sph = std::make_shared<sphere>(vec3f(5,2,-5), 3, white);
     sph->specular = true;
-    msh.add_surface(sph);
+//    msh.add_surface(sph);
     //msh.add_surface(std::make_shared<sphere>(vec3f(-6,1,-8), 2, white));
 
     //add light
@@ -164,8 +164,7 @@ QImage cornell_box(){
     std::vector<float> intensities;
     intensities.push_back(1);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
-    v.samples_per_ray = 500;
-    v.max_recursion_depth = 5;
+    v.samples_per_ray = 1000;
     v.path_tracing = true;
     v.shadows = false;
     v.num_threads = 1;
