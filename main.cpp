@@ -162,12 +162,12 @@ QImage cornell_box(){
     std::vector<float> intensities;
     intensities.push_back(1);
     view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
-    v.samples_per_ray = 1;
+    v.samples_per_ray = 10;
     v.max_recursion_depth = 5;
-    v.path_tracing = false;
+    v.path_tracing = true;
     v.shadows = false;
-    v.num_threads = 200;
-    v.multithreading = false;
+    v.num_threads = 100;
+    v.multithreading = true;
     return v.render();
 }
 
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
     img.save("rendered.png");
     image = QPixmap::fromImage(img);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
     //image.fill(Qt::black);
 
     QLabel lbl;
