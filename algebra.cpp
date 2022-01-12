@@ -5,7 +5,7 @@ vec3f::vec3f(float x, float y, float z) : x(x), y(y), z(z){};
 
 vec3f::vec3f() : x(1),y(1), z(1) {};
 
-vec3f::vec3f(QRgb col) : x(qRed(col)/255),y(qGreen(col)/255), z(qBlue(col)/255) {};
+vec3f::vec3f(QRgb col) : x((float) qRed(col)/255),y((float) qGreen(col)/255), z((float) qBlue(col)/255) {};
 
 vec3f vec3f::operator-(){
     vec3f res(-x, -y, -z);
