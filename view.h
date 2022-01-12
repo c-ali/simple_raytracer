@@ -27,7 +27,7 @@ public:
 
     //path tracing options
     bool path_tracing = false;
-    float lighting_fac = 300;
+    float lighting_fac = 200;
     float roulette_prob = 1;
     bool next_event = false;
 

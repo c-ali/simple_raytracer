@@ -155,16 +155,20 @@ vec3f view::trace_color(ray r, int recursion_depth){
     hit_record hr = hit_record(); //view hit record
 
     //check if ray hits any object
-    if(msh.hit(r, eps, max_dist, hr) && recursion_depth < max_recursion_depth){
+    if(msh.hit(r, eps, max_dist, hr)){
+        QRgb scol = *hr.get_surface_color();
+
         vec3f surf_col(*hr.get_surface_color());
         vec3f emittence(*hr.get_emittence());
 
-//        //play russian roulette
-//        float termination_prob = std::max(surf_col.x, std::max(surf_col.y, surf_col.z)) * roulette_prob;
-//        if(randf(1) > termination_prob)
-//            return emittence;
-//        else
-//            surf_col = surf_col * (1/termination_prob);
+        //play russian roulette
+        float termination_prob = std::max(surf_col.x, std::max(surf_col.y, surf_col.z)) * roulette_prob;
+        if(randf(1) > termination_prob)
+            //calcel ray
+            return emittence;
+        else
+            //reweight non-cancelled rays
+            surf_col = surf_col * (1/termination_prob);
 
         //cast new ray in hemisphere with correct probability
         vec3f normal = *hr.get_normal();
@@ -209,7 +213,7 @@ vec3f view::trace_color(ray r, int recursion_depth){
 }
 
 ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal){
-    //returns random ray in hemisphere of origin
+    //returns random ray in hemisphere of origin  by rejection method
 
     //random numbers between 0-1 and 1
     float x, y, z, radius;
@@ -234,14 +238,33 @@ ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal){
 }
 
 ray random_ray_in_hemisphere_constr(const vec3f &origin, const vec3f &normal){
-    //random numbers between 0-1 and 1
-    float theta, phi;
+    //returns random ray in hemisphere of origin by constructive method
+    float phi, theta;
     vec3f dir;
-    phi = randf(2*M_PI*1000)/1000;
-    theta = randf(M_PI*1000)/1000;
-    dir = vec3f(std::sin(theta) * std::cos(phi), std::sin(theta) * std::sin(phi), std::cos(theta));
+    theta = randf(2*M_PI);
+    phi = std::acos(randf(2)-1);
+    dir = vec3f(std::sin(phi) * std::cos(theta), std::sin(phi) * std::sin(theta), std::cos(phi));
     if(dir * normal > 0)
         return ray(origin, dir);
     else
         return ray(origin, -dir);
 }
+
+ray random_ray_in_hemisphere_cosinew(const vec3f &origin, const vec3f &normal){
+    //cosine weighted hemisphere sampling
+
+    float rnd = randf(1);
+    float r = std::sqrt(rnd);
+    float theta = randf(2*M_PI);
+
+    float x = r * std::cos(theta);
+    float y = r * std::sin(theta);
+
+    vec3f dir(x, y, std::sqrt(std::max(0.0f, 1 - rnd)));
+
+    if(dir * normal > 0)
+        return ray(origin, dir);
+    else
+        return ray(origin, -dir);
+}
+
