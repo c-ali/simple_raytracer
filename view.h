@@ -27,9 +27,10 @@ public:
 
     //path tracing options
     bool path_tracing = false;
-    float lighting_fac = 200;
+    float lighting_fac = 100;
     float roulette_prob = 1;
     bool next_event = false;
+    bool cos_weighted = false;
 
     //multithreading options
     int num_threads = 15;
@@ -69,6 +70,7 @@ public:
 
 ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal);
 ray random_ray_in_hemisphere_constr(const vec3f &origin, const vec3f &normal);
+ray random_ray_in_hemisphere_cosw(const vec3f &origin, const vec3f &normal);
 float randf(float scale);
 
 

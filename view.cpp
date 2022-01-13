@@ -172,13 +172,13 @@ vec3f view::trace_color(ray r, int recursion_depth){
 
         //cast new ray in hemisphere with correct probability
         vec3f normal = *hr.get_normal();
-        ray r_new = random_ray_in_hemisphere_reject (*hr.get_sect_coords(), normal);
+        ray r_new = (cos_weighted) ? random_ray_in_hemisphere_cosw(*hr.get_sect_coords(), normal) : random_ray_in_hemisphere_reject(*hr.get_sect_coords(), normal);
 
         //compute brdf;
         vec3f brdf = surf_col / M_PI;
 
         vec3f sect_pt(*hr.get_sect_coords());
-        vec3f incoming;
+        vec3f incoming(0,0,0);
         if(emittence*vec3f(1,1,1) == 0){
             //recursively trace reflected light
             incoming = trace_color(r_new, recursion_depth + 1);
@@ -203,14 +203,48 @@ vec3f view::trace_color(ray r, int recursion_depth){
         }
 
         //apply rendering eq
-        float cos_angle = r_new.dir * normal;
-        color = emittence + (pt_mult(brdf, incoming) *  (cos_angle / p_diffuse));
+        float cos_angle = (cos_weighted) ? 1 : r_new.dir * normal;
+        color = emittence + (pt_mult(brdf, incoming) *  ( cos_angle / p_diffuse));
     }
 
     //if there is no hit or max recursion depth is reached return bgc
     return color;
 
 }
+
+inline vec3f orthogonalize(const vec3f &normal, const vec3f &non_ortho) {
+   float h = normal*non_ortho;
+   return non_ortho - normal*h;
+}
+
+inline vec3f make_orthonormal_vector(const vec3f &normal) {
+   vec3f candidates[3];
+   candidates[0] = vec3f(1,0,0);
+   candidates[1] = vec3f(0,1,0);
+   candidates[2] = vec3f(0,0,1);
+
+   float min = 1e20;
+   unsigned cIndex = 0;
+   for (unsigned i=0; i<3; i++) {
+      float p = fabs(normal*candidates[i]);
+      if (p<min) {
+         min = p;
+         cIndex = i;
+      }
+   }
+   vec3f result = orthogonalize(normal, candidates[cIndex]);
+   return result.normalized();
+}
+
+inline vec3f shift_into_normal_system(vec3f normal, vec3f dir){
+    vec3f u = make_orthonormal_vector(normal);
+    vec3f v = cross(normal, u);
+
+    vec3f ret = u * dir[0] + v * dir[1] + normal * dir[2];
+    return ret;
+}
+
+
 
 ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal){
     //returns random ray in hemisphere of origin  by rejection method
@@ -231,6 +265,7 @@ ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal){
 
     //check if dir has the correct orientation
     dir = vec3f(x,y,z);
+
     if(dir * normal > 0)
         return ray(origin, dir);
     else
@@ -239,32 +274,27 @@ ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal){
 
 ray random_ray_in_hemisphere_constr(const vec3f &origin, const vec3f &normal){
     //returns random ray in hemisphere of origin by constructive method
-    float phi, theta;
+    float theta, phi;
     vec3f dir;
-    theta = randf(2*M_PI);
-    phi = std::acos(randf(2)-1);
-    dir = vec3f(std::sin(phi) * std::cos(theta), std::sin(phi) * std::sin(theta), std::cos(phi));
-    if(dir * normal > 0)
-        return ray(origin, dir);
-    else
-        return ray(origin, -dir);
+    phi = randf(2*M_PI);
+    theta = std::acos(randf(1));
+    dir = vec3f(std::sin(theta) * std::cos(phi), std::sin(theta) * std::sin(phi), std::cos(theta));
+    return ray(origin, shift_into_normal_system(normal, dir));
 }
 
-ray random_ray_in_hemisphere_cosinew(const vec3f &origin, const vec3f &normal){
+
+
+ray random_ray_in_hemisphere_cosw(const vec3f &origin, const vec3f &normal){
     //cosine weighted hemisphere sampling
 
-    float rnd = randf(1);
-    float r = std::sqrt(rnd);
+    float radius = randf(1);
+    float r = std::sqrt(radius);
     float theta = randf(2*M_PI);
-
     float x = r * std::cos(theta);
     float y = r * std::sin(theta);
+    vec3f dir(x, y, std::sqrt(1 - radius)); // (1 - rnd) = sqrt(1-x^2-y^2))
 
-    vec3f dir(x, y, std::sqrt(std::max(0.0f, 1 - rnd)));
-
-    if(dir * normal > 0)
-        return ray(origin, dir);
-    else
-        return ray(origin, -dir);
+    return ray(origin, shift_into_normal_system(normal, dir));
 }
+
 

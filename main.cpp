@@ -113,17 +113,18 @@ QImage view_mesh(){
 }
 
 QImage cornell_box(){
-    int width = 500;
-    int height = 500;
+    int width = 250;
+    int height = 250;
     float viewing_dst = 0.38;
+    float intensity = 200;
     vec3f w = vec3f(0,0,1);
     mesh msh = mesh();
     vec3f viewer_pos = vec3f(0,5,-0.1);
-    QRgb red = qRgb(255,0,0);
-    QRgb green = qRgb(0,255,0);
-    QRgb blue = qRgb(0,0,255);
-    QRgb white = qRgb(255,255,255);
-    QRgb grey = qRgb(200,200,200);
+    QRgb red = qRgb(intensity,0,0);
+    QRgb green = qRgb(0,intensity,0);
+    QRgb blue = qRgb(0,0,intensity);
+    QRgb white = qRgb(intensity,intensity,intensity);
+    QRgb black = qRgb(0,0,0);
 
     //left wall
     msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0), vec3f(-10,10,0), vec3f(-10,0,-10), vec3f(1,0,0), red));
@@ -139,8 +140,8 @@ QImage cornell_box(){
     msh.add_surface(std::make_shared<triangle>(vec3f(10,10,-10), vec3f(-10,0,-10), vec3f(10,0,-10), vec3f(0,0,1), white));
 
     //front wall
-    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0),vec3f(10,10,0), vec3f(-10,10,0),vec3f(0,0,-1), white));
-    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(-10,0,0), vec3f(10,0,0), vec3f(0,0,-1), white));
+    msh.add_surface(std::make_shared<triangle>(vec3f(-10,0,0),vec3f(10,10,0), vec3f(-10,10,0),vec3f(0,0,-1), black));
+    msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(-10,0,0), vec3f(10,0,0), vec3f(0,0,-1), black));
 
     //ceiling
     msh.add_surface(std::make_shared<triangle>(vec3f(10,10,0), vec3f(-10,10,0), vec3f(10,10,-10), vec3f(0,-1,0), white));
@@ -163,13 +164,14 @@ QImage cornell_box(){
     lamps.push_back(vec3f(0,3,-5));
     std::vector<float> intensities;
     intensities.push_back(1);
-    view v = view(width,height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
+    view v = view(width, height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
     v.samples_per_ray = 500;
     v.path_tracing = true;
+    v.lighting_fac = 2000;
     v.shadows = false;
     v.num_threads = 1;
-    v.next_event = true;
-    v.roulette_prob = 0.5;
+    v.next_event = false;
+    v.cos_weighted = true;
     msh.build_basic_tree(2, 50);
     return v.render();
 }
