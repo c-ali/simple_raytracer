@@ -158,6 +158,7 @@ vec3f view::trace_color(ray r, int recursion_depth){
     if(msh.hit(r, eps, max_dist, hr)){
 
         vec3f surf_col(*hr.get_surface_color());
+        vec3f sect_pt(*hr.get_sect_coords());
         color = *hr.get_emittence();
 
         //play russian roulette
@@ -168,19 +169,19 @@ vec3f view::trace_color(ray r, int recursion_depth){
 
         //cast new ray in hemisphere with correct probability
         vec3f normal = *hr.get_normal();
-        ray r_new = (cos_weighted) ? random_ray_in_hemisphere_cosw(*hr.get_sect_coords(), normal) : random_ray_in_hemisphere_reject(*hr.get_sect_coords(), normal);
+        ray r_new = (cos_weighted) ? random_ray_in_hemisphere_cosw(sect_pt, normal) : random_ray_in_hemisphere_reject(sect_pt, normal);
 
         //compute brdf;
         vec3f brdf = surf_col / M_PI;
-        vec3f sect_pt(*hr.get_sect_coords());
         vec3f indirect_light(0,0,0);
 
 
         //if not emitting trace path
         if(color*vec3f(1,1,1) == 0){
-            float reciever_angle = (cos_weighted) ? 1 : r_new.dir * normal;
+            float reciever_angle = r_new.dir * normal;
+            float inv_pdf = (cos_weighted) ? 2 : reciever_angle * inv_p_diffuse;
             //recursively trace reflected light and apply rendering eq
-            indirect_light = (pt_mult(brdf, trace_color(r_new, recursion_depth + 1)) *  ( reciever_angle / p_diffuse));
+            indirect_light = (pt_mult(brdf, trace_color(r_new, recursion_depth + 1)) *  inv_pdf);
 
             //next event estimation
             vec3f direct_light(0,0,0);

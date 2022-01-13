@@ -58,7 +58,7 @@ private:
     vec3f background_color = vec3f(0,0,0); //background color
     std::shared_ptr<shader> shdr;
 
-    const float p_diffuse =  1 / (2 * M_PI);
+    const float inv_p_diffuse =  2 * M_PI;
     vec3f ray_color(ray r, float t0, float t1, int recursion_depth);
     vec3f trace_color(ray r, int recursion_depth);
     void compute_lines(int j_start, int j_end);
