@@ -296,6 +296,8 @@ mesh::mesh(){}
 
 void mesh::add_surface(std::shared_ptr<surface> new_surface){
     faces.push_back(new_surface);
+    if(new_surface->emittence != qRgb(0,0,0))
+        emitting_faces.push_back(new_surface);
 }
 
 int mesh::size(){
@@ -375,7 +377,7 @@ void mesh::read_obj(const char* path){
                 tri = make_shared<triangle>(vec3f(get_vertex(idxs[0])), vec3f(get_vertex(idxs[1])), vec3f(get_vertex(idxs[2])));
             }
             faces.push_back(tri);
-            if(tri->emittence > 0){
+            if(tri->emittence != qRgb(0,0,0)){
                 emitting_faces.push_back(tri);
             }
         }

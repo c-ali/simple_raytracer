@@ -171,7 +171,7 @@ QImage cornell_box(){
     v.shadows = false;
     v.num_threads = 1;
     v.next_event = false;
-    v.cos_weighted = true;
+    v.cos_weighted = false;
     msh.build_basic_tree(2, 50);
     return v.render();
 }

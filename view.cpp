@@ -156,19 +156,15 @@ vec3f view::trace_color(ray r, int recursion_depth){
 
     //check if ray hits any object
     if(msh.hit(r, eps, max_dist, hr)){
-        QRgb scol = *hr.get_surface_color();
 
         vec3f surf_col(*hr.get_surface_color());
-        vec3f emittence(*hr.get_emittence());
+        color = *hr.get_emittence();
 
         //play russian roulette
         float termination_prob = std::max(surf_col.x, std::max(surf_col.y, surf_col.z)) * roulette_prob;
         if(randf(1) > termination_prob)
             //calcel ray
-            return emittence;
-        else
-            //reweight non-cancelled rays
-            surf_col = surf_col * (1/termination_prob);
+            return color;
 
         //cast new ray in hemisphere with correct probability
         vec3f normal = *hr.get_normal();
@@ -176,23 +172,33 @@ vec3f view::trace_color(ray r, int recursion_depth){
 
         //compute brdf;
         vec3f brdf = surf_col / M_PI;
-
         vec3f sect_pt(*hr.get_sect_coords());
-        vec3f incoming(0,0,0);
-        if(emittence*vec3f(1,1,1) == 0){
-            //recursively trace reflected light
-            incoming = trace_color(r_new, recursion_depth + 1);
+        vec3f indirect_light(0,0,0);
+
+
+        //if not emitting trace path
+        if(color*vec3f(1,1,1) == 0){
+            float reciever_angle = (cos_weighted) ? 1 : r_new.dir * normal;
+            //recursively trace reflected light and apply rendering eq
+            indirect_light = (pt_mult(brdf, trace_color(r_new, recursion_depth + 1)) *  ( reciever_angle / p_diffuse));
 
             //next event estimation
+            vec3f direct_light(0,0,0);
             if(next_event){
                 for(size_t i = 0; i < msh.emitting_faces.size(); ++i){
                     //send shadow ray
                     hit_record sr = hit_record();
-                    ray shadow_ray = ray(sect_pt, msh.emitting_faces[i]->random_surface_pt() - sect_pt);
-                    if(msh.emitting_faces[i]->hit(shadow_ray, eps, max_dist, sr))
-                        incoming = (incoming + trace_color(shadow_ray, 0)) / 2;
+                    ray shadow_ray = ray(sect_pt,  msh.emitting_faces[i]->random_surface_pt() - sect_pt);
+                    if(msh.emitting_faces[i]->hit(shadow_ray, eps, max_dist, sr)){
+                        float emitter_angle = -shadow_ray.dir.normalized() * *sr.get_normal();
+                        float dist = shadow_ray.dir*shadow_ray.dir;
+                        direct_light = pt_mult(brdf, trace_color(shadow_ray, recursion_depth + 1)) * (reciever_angle * emitter_angle / dist);
+                   }
                 }
             }
+
+            float weight = (recursion_depth == 0 || !next_event) ? 1 : 0.5;
+            color = color + weight * (direct_light + indirect_light) / termination_prob;
         }
 
         //if specular reflection is used, recurse call
@@ -202,9 +208,7 @@ vec3f view::trace_color(ray r, int recursion_depth){
             return trace_color(r, recursion_depth + 1);
         }
 
-        //apply rendering eq
-        float cos_angle = (cos_weighted) ? 1 : r_new.dir * normal;
-        color = emittence + (pt_mult(brdf, incoming) *  ( cos_angle / p_diffuse));
+
     }
 
     //if there is no hit or max recursion depth is reached return bgc
