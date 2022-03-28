@@ -113,8 +113,8 @@ QImage view_mesh(){
 }
 
 QImage cornell_box(){
-    int width = 250;
-    int height = 250;
+    int width = 500;
+    int height = 500;
     float viewing_dst = 0.38;
     float intensity = 200;
     vec3f w = vec3f(0,0,1);
@@ -158,7 +158,7 @@ QImage cornell_box(){
     //msh.add_surface(std::make_shared<sphere>(vec3f(-6,1,-8), 2, white));
 
     //add light
-    msh.add_surface(std::make_shared<sphere>(vec3f(0,10,-7), 3, white, white));
+    msh.add_surface(std::make_shared<sphere>(vec3f(0,10,-5), 2, white, white));
 
     std::vector<vec3f> lamps;
     lamps.push_back(vec3f(0,3,-5));
@@ -167,10 +167,10 @@ QImage cornell_box(){
     view v = view(width, height, viewer_pos, w, msh, viewing_dst, lamps, intensities);
     v.samples_per_ray = 500;
     v.path_tracing = true;
-    v.lighting_fac = 2000;
+    v.lighting_fac = 5000;
     v.shadows = false;
     v.num_threads = 1;
-    v.next_event = false;
+    v.next_event = true;
     v.cos_weighted = true;
     msh.build_basic_tree(2, 50);
     return v.render();
