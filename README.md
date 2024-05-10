@@ -1,8 +1,8 @@
 # Simple path tracer implementation for educational purposes
 
-Simple raytracer is an simple and efficient CPU distributed raytracing / path-tracing implementation from scratch in C++ that mainly serves educational purposes. It has no other dependencies than QT for displaying the resulting image and its design is held simple by design.
+Simple raytracer is an simple and efficient CPU distributed raytracing / path-tracing implementation from scratch in C++ that mainly serves educational purposes. It has no other dependencies than QT for displaying the resulting image and its design is held simple by choice.
 
-![](pics/rendered_final.png)
+![](pics/reflective_scene.png)
 
 # Installation
 
@@ -70,6 +70,13 @@ Available local illumination and shading models include the following features:
 - Color interpolation / [Gouraud shading](https://en.wikipedia.org/wiki/Gouraud_shading)
 - Normal interpolation / [Phong shading](https://en.wikipedia.org/wiki/Phong_reflection_model)
 
+## Data Structures
+
+This software supports loading triangle meshes in the Wavefront (.obj) format. In order to display bigger meshes in a reasonable time, this software supports (fast) KD-Trees by calling the `mesh.build_fast_tree` method of the `mesh` class after loading a mesh. We rendered the following 1000x1000 image (image below is cropped) of the Stanford dragon containing 871,414 triangles in approximately 10 seconds with 100 samples/ray on a Macbook Air (2022):
+
+![](pics/dragon_noshadow.png)
+
+
 ## Reflection and Refraction
 
 Reflection is supported for all primitives by setting `surface.specular = true`. Refraction is TBD.
@@ -91,11 +98,10 @@ Antialiasing can be used by setting `view.antialias = true` and `view.samples_pe
 
 Other supported distributed-raytracing features are:
 
-- Soft shadows
-- Glossy reflections
-- Depth of field (DOF) effect
+- Soft shadows![](pics/tree.png)
 
-{width=80%}![A christmas tree rendered with distributed raytracing showcasing depth-of-field and soft shadows](pics/tree.png)
+- Glossy reflections
+- Depth of field (DOF) effect ![](pics/dof.png)
 
 ## Path Tracing features
 
