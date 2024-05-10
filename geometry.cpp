@@ -163,7 +163,7 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
 };
 
 
-checkerboard::checkerboard(float height) : height(height){};
+checkerboard::checkerboard(float height, bool stripes) : height(height), stripes(stripes){};
 
 box checkerboard::bounding_box()
 {
@@ -188,12 +188,18 @@ bool checkerboard::hit(ray r, float t0, float t1, hit_record &rec)
         return false;
 
     vec3f sect_coords = r.origin + t_sect * r.dir;
-
-    if(std::fmod(std::abs(sect_coords.x) + std::abs(sect_coords.z), 2) < 1)
-    //if(std::fmod(sect_coords.x + sect_coords.z, 5) < 2.5)
-        color = qRgb(255,255,255);
-    else
-        color = qRgb(0,0,0);
+    if(stripes){
+        if(std::fmod(std::abs(sect_coords.x) + std::abs(sect_coords.z), 2) < 1)
+            color = qRgb(255,255,255);
+        else
+            color = qRgb(0,0,0);
+    }
+    else{
+        if (static_cast<int>(std::floor(sect_coords.x) + std::floor(sect_coords.z)) % 2 == 0)
+            color = qRgb(255,255,255);
+        else
+            color = qRgb(0,0,0);
+    }
     vec3f normal(0,1,0);
     rec.register_hit(normal, sect_coords , color, t_sect, specular, emittence);
     return true;

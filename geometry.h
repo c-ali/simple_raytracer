@@ -62,8 +62,9 @@ public:
 class checkerboard : public surface {
 private:
     float height;
+    bool stripes = false;
 public:
-    checkerboard(float height);
+    checkerboard(float height, bool stripes);
     box bounding_box() override;
     virtual vec3f centroid() override;
     vec3f random_surface_pt() override;

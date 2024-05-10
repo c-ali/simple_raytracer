@@ -17,10 +17,6 @@ void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_colo
     this->emittence = emittence;
 }
 
-vec3f hit_record::brdf(float reciever_angle)
-{
-
-}
 
 
 
