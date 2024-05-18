@@ -8,7 +8,6 @@
 #include "algebra.h"
 #include "geometry.h"
 #include "shading.h"
-#include <math.h>
 
 
 extern int hit_count;
@@ -67,10 +66,10 @@ public:
     view(int width, int height, vec3f viewer_pos, vec3f viewing_dir, mesh &msh, float viewing_dst, std::vector<vec3f> light_srcs, std::vector<float> light_intensites);
 };
 
-
 ray random_ray_in_hemisphere_reject(const vec3f &origin, const vec3f &normal);
 ray random_ray_in_hemisphere_constr(const vec3f &origin, const vec3f &normal);
 ray random_ray_in_hemisphere_cosw(const vec3f &origin, const vec3f &normal);
+ray get_reflected_ray(const ray &r, const vec3f sect_pt, const vec3f &normal);
 float randf(float scale);
 
 

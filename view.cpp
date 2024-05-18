@@ -118,13 +118,13 @@ vec3f view::ray_color(ray r, float t0, float t1, int recursion_depth){
 
     //check if ray hits any object
     if(msh.hit(r, t0, t1, hr)){
-        vec3f const *sect_pt = hr.get_sect_coords();
+        vec3f const sect_pt = *hr.get_sect_coords();
         if(shadows){
             std::vector<bool> in_shadow;
             //check for shadow by each light source
             for(size_t k = 0; k < light_srcs.size(); ++k){
-                vec3f ray_dir = light_srcs[k] - *sect_pt;
-                ray shadow_ray = ray(*sect_pt, ray_dir);
+                vec3f ray_dir = light_srcs[k] - sect_pt;
+                ray shadow_ray = ray(sect_pt, ray_dir);
                 in_shadow.push_back(msh.hit(shadow_ray, t0, t1, sr));
             }
             color = shdr->shade(hr, in_shadow);
@@ -135,10 +135,8 @@ vec3f view::ray_color(ray r, float t0, float t1, int recursion_depth){
 
         //if specular reflection is used, recurse call
         if(hr.is_specular() && recursion_depth < max_recursion_depth){
-            vec3f n = *hr.get_normal();
-            vec3f dir_ = r.dir - 2 * (r.dir * n) * n;
-            ray r_(*hr.get_sect_coords(), dir_);
-            return ray_color(r_, eps, max_dist, recursion_depth+1);
+            ray reflected_ray = get_reflected_ray(r, sect_pt, *hr.get_normal());
+            return ray_color(reflected_ray, eps, max_dist, recursion_depth+1);
         }
     }
 
@@ -204,9 +202,8 @@ vec3f view::trace_color(ray r, int recursion_depth){
 
         //if specular reflection is used, recurse call
         if(hr.is_specular()){
-            vec3f dir_ = r.dir - 2 * (r.dir * normal) * normal;
-            ray r_(sect_pt, dir_);
-            return trace_color(r, recursion_depth + 1);
+            ray reflected_ray = get_reflected_ray(r, sect_pt, normal);
+            return trace_color(reflected_ray, recursion_depth + 1);
         }
 
 
@@ -215,6 +212,13 @@ vec3f view::trace_color(ray r, int recursion_depth){
     //if there is no hit or max recursion depth is reached return bgc
     return color;
 
+}
+
+inline ray get_reflected_ray(const ray &r, const vec3f sect_pt, const vec3f &normal) {
+    // to reflect a ray, incident angle to normal = outgoing angle to normal
+    vec3f dir_ = r.dir - 2 * (r.dir * normal) * normal;
+    ray r_(sect_pt, dir_);
+    return r_;
 }
 
 inline vec3f orthogonalize(const vec3f &normal, const vec3f &non_ortho) {

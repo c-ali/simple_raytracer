@@ -8,6 +8,7 @@
 #include <iostream>
 #include "algebra.h"
 #include "view.h"
+
 QImage aligned_reflective_gallery(){
     int width = 1000;
     int height = 1000;
@@ -211,6 +212,8 @@ QImage mirror_scene(){
     light_srcs.push_back(l2);
     view v = view(width,height, viewer_pos,w, msh, viewing_dst, light_srcs, light_intensities);
     QImage img = v.render();
+
+    v.path_tracing = true; // Path tracing turned off
     return img;
 }
 
@@ -308,10 +311,10 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     QPixmap image;
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    QImage img = view_mesh();
+    //QImage img = view_mesh();
     //QImage img = focal_scene();
     //QImage img = cornell_box();
-    //QImage img = mirror_scene();
+    QImage img = mirror_scene();
     img.save("./rendered.png");
     image = QPixmap::fromImage(img);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
