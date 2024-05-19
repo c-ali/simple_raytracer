@@ -79,9 +79,13 @@ This software supports loading triangle meshes in the Wavefront (.obj) format. I
 
 ## Reflection and Refraction
 
-Reflection is supported for all primitives by setting `surface.specular = true`. Refraction is TBD.
+Reflection is supported for all primitives by setting `surface.specular = true`.
 
 ![Reflective sphere on checkerboard floor without anti-aliasing.](pics/spheres_reflection.png)
+
+Reflection is supported for all primitives by setting e.g. `surface.refract_eta = 1.5`. Note that reflection has to be disabled for refraction to work. Shadows are currently not supported.
+
+![Reflective sphere on checkerboard floor without anti-aliasing.](pics/spheres_refraction.png)
 
 ## Distributed Raytracing features
 ### Antialiasing
