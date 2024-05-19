@@ -190,8 +190,8 @@ QImage mirror_scene(){
     std::shared_ptr<surface> sph1 = std::make_shared<sphere>(vec3f(2,0.8,0), 0.8);
     std::shared_ptr<surface> sph3 = std::make_shared<sphere>(vec3f(0,1,0), 1);
     if(refract){
-        sph1 = std::make_shared<sphere>(vec3f(6,4,-14), 2);
-        sph3 = std::make_shared<sphere>(vec3f(0,4,-14), 3);
+        sph1 = std::make_shared<sphere>(vec3f(6,4,-30), 2);
+        sph3 = std::make_shared<sphere>(vec3f(0,4,-30), 3);
     }
     std::shared_ptr<surface> sph2 = std::make_shared<sphere>(vec3f(0,2,-5), 2);
     std::shared_ptr<checkerboard> floor = std::make_shared<checkerboard>(0, false);
@@ -201,7 +201,7 @@ QImage mirror_scene(){
 
     if(refract){
         sph2->specular = false;
-        sph2->refract_eta = 5;
+        sph2->refract_eta = 10;
     }
     else
         sph2->specular = true;
@@ -222,7 +222,9 @@ QImage mirror_scene(){
     light_srcs.push_back(l2);
     view v = view(width,height, viewer_pos,w, msh, viewing_dst, light_srcs, light_intensities);
     v.anti_alias = true;
-    v.samples_per_ray = 20;
+    v.cos_weighted = true;
+    v.shadows = false;
+    v.samples_per_ray = 100;
     QImage img = v.render();
 
     return img;
@@ -325,9 +327,9 @@ int main(int argc, char *argv[])
     //QImage img = view_mesh();
     //QImage img = focal_scene();
     //QImage img = cornell_box();
-    //QImage img = mirror_scene();
-    QImage img = aligned_reflective_gallery();
-    img.save("./rendered.png");
+    QImage img = mirror_scene();
+    //QImage img = aligned_reflective_gallery();
+    img.save("../../../../../rendered.png");
     image = QPixmap::fromImage(img);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
