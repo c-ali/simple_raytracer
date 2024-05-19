@@ -18,7 +18,8 @@ public:
 class surface {
 public:
     QRgb color = qRgb(0,100,0);
-    bool specular = false;
+    bool specular = false; // for now, if specular is active, refractive is ignored
+    float refract_eta = 1; // 1 is the refractive idx of air / disabled
     virtual bool hit(ray r, float t0, float t1, hit_record &rec) = 0;
     virtual box bounding_box() = 0;
     virtual vec3f centroid() = 0;

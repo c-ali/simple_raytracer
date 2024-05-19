@@ -2,6 +2,7 @@
 #include <thread>
 #include <future>
 #include <functional>
+#include <algorithm>
 #include <list>
 #include "view.h"
 #include "algebra.h"
@@ -134,9 +135,15 @@ vec3f view::ray_color(ray r, float t0, float t1, int recursion_depth){
 
 
         //if specular reflection is used, recurse call
-        if(hr.is_specular() && recursion_depth < max_recursion_depth){
-            ray reflected_ray = get_reflected_ray(r, sect_pt, *hr.get_normal());
-            return ray_color(reflected_ray, eps, max_dist, recursion_depth+1);
+        if(recursion_depth < max_recursion_depth){
+            if(hr.is_specular()){
+                ray reflected_ray = get_reflected_ray(r, sect_pt, *hr.get_normal());
+                return ray_color(reflected_ray, eps, max_dist, recursion_depth+1);
+            }
+            else if(hr.is_refractive()){
+                ray refracted_ray = get_refracted_ray(r, sect_pt, *hr.get_normal(), hr.refract_eta);
+                return ray_color(refracted_ray, eps, max_dist, recursion_depth+1);
+            }
         }
     }
 
@@ -201,11 +208,16 @@ vec3f view::trace_color(ray r, int recursion_depth){
         }
 
         //if specular reflection is used, recurse call
-        if(hr.is_specular()){
-            ray reflected_ray = get_reflected_ray(r, sect_pt, normal);
-            return trace_color(reflected_ray, recursion_depth + 1);
+        if(recursion_depth < max_recursion_depth){
+            if(hr.is_specular()){
+                ray reflected_ray = get_reflected_ray(r, sect_pt, *hr.get_normal());
+                return ray_color(reflected_ray, eps, max_dist, recursion_depth+1);
+            }
+            else if(hr.is_refractive()){
+                ray refracted_ray = get_refracted_ray(r, sect_pt, *hr.get_normal(), hr.refract_eta);
+                return ray_color(refracted_ray, eps, max_dist, recursion_depth+1);
+            }
         }
-
 
     }
 
@@ -221,28 +233,52 @@ inline ray get_reflected_ray(const ray &r, const vec3f sect_pt, const vec3f &nor
     return r_;
 }
 
+inline ray get_refracted_ray(const ray &r, const vec3f sect_pt, const vec3f &normal, float eta_out) {
+    float cosi = std::clamp(-1.f, 1.f, r.dir * normal);
+    // refractive indices of the materials
+    float eta_in = 1;
+    vec3f n = normal;
+    // check wether the ray comes from inside or outside of the object
+    // by watching the dot product of the normal and ray direction
+    if (cosi < 0)
+        cosi = -cosi;
+    else{
+        // in we are outside, swap indexes and normal direction
+        std::swap(eta_in, eta_out);
+        n= -1*normal;
+    }
+    float eta = eta_in / eta_out;
+    // apply Snell's law
+    float k = 1 - eta * eta * (1 - cosi * cosi);
+    vec3f dir_(k < 0 ? 0 : eta * r.dir + (eta * cosi - sqrtf(k)) * n);
+    ray r_(sect_pt, dir_);
+    return r_;
+}
+
+
 inline vec3f orthogonalize(const vec3f &normal, const vec3f &non_ortho) {
-   float h = normal*non_ortho;
-   return non_ortho - normal*h;
+    float h = normal*non_ortho;
+    return non_ortho - normal*h;
 }
 
 inline vec3f make_orthonormal_vector(const vec3f &normal) {
-   vec3f candidates[3];
-   candidates[0] = vec3f(1,0,0);
-   candidates[1] = vec3f(0,1,0);
-   candidates[2] = vec3f(0,0,1);
+    vec3f candidates[3];
+    candidates[0] = vec3f(1,0,0);
+    candidates[1] = vec3f(0,1,0);
+    candidates[2] = vec3f(0,0,1);
 
-   float min = 1e20;
-   unsigned cIndex = 0;
-   for (unsigned i=0; i<3; i++) {
+    // orthogonalize in the 'most orthogonal' base direction
+    float min = 1e20;
+    unsigned cIndex = 0;
+    for (unsigned i=0; i<3; i++) {
       float p = fabs(normal*candidates[i]);
       if (p<min) {
          min = p;
          cIndex = i;
       }
-   }
-   vec3f result = orthogonalize(normal, candidates[cIndex]);
-   return result.normalized();
+    }
+    vec3f result = orthogonalize(normal, candidates[cIndex]);
+    return result.normalized();
 }
 
 inline vec3f shift_into_normal_system(vec3f normal, vec3f dir){

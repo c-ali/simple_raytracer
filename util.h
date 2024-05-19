@@ -34,10 +34,12 @@ public:
     QRgb*  get_surface_color();
     QRgb* get_emittence();
     bool is_specular();
+    bool is_refractive();
+    float refract_eta;
     void reset();
     hit_record();
     float get_t();
-    void register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, QRgb emittence);
+    void register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, float refract_eta, QRgb emittence);
 };
 
 

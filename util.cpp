@@ -8,12 +8,13 @@
 
 hit_record::hit_record(){};
 
-void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, QRgb emittence){
+void hit_record::register_hit(vec3f normal, vec3f sect_coords, QRgb surface_color, float t, bool specular, float refract_eta, QRgb emittence){
     this->normal = normal;
     this->sect_coords = sect_coords;
     this->surface_color = surface_color;
     this->t = t;
     this->specular = specular;
+    this->refract_eta = refract_eta;
     this->emittence = emittence;
 }
 
@@ -36,6 +37,7 @@ float hit_record::get_t(){return t;};
 
 bool hit_record::is_specular(){return specular;};
 
+bool hit_record::is_refractive(){return specular ? false : refract_eta != 1;};
 
 box::box() : min(vec3f(1e30f,1e30f,1e30f)), max(vec3f(-1e30f,-1e30f,-1e30f)){};
 

@@ -42,7 +42,7 @@ bool sphere::hit(ray r, float t0, float t1, hit_record &rec){
             //fill hit record and report hit
             //get section coordinate, normal and color
             vec3f intersect_coord = r.origin + t_intersect * r.dir;
-            rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t_intersect, specular, emittence);
+            rec.register_hit(get_normal(intersect_coord), intersect_coord, color, t_intersect, specular, refract_eta, emittence);
             return true;
         }
     }
@@ -158,7 +158,7 @@ bool triangle::hit(ray r, float t0, float t1, hit_record &rec){
         normal = cross((v2 - v1),(v3 - v1));
     normal = normal.normalized();
 
-    rec.register_hit(normal, intersect_coord, color, t, specular, emittence);
+    rec.register_hit(normal, intersect_coord, color, t, specular, refract_eta, emittence);
     return true;
 };
 
@@ -201,7 +201,7 @@ bool checkerboard::hit(ray r, float t0, float t1, hit_record &rec)
             color = qRgb(0,0,0);
     }
     vec3f normal(0,1,0);
-    rec.register_hit(normal, sect_coords , color, t_sect, specular, emittence);
+    rec.register_hit(normal, sect_coords , color, t_sect, specular, refract_eta, emittence);
     return true;
 }
 

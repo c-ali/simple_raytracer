@@ -129,7 +129,7 @@ QImage aligned_reflective_gallery(){
     msh.add_surface(tri8);
 
     view v = view(width, height, viewer_pos, w, msh, viewing_dst, light_srcs, light_intensities);
-    v.samples_per_ray = 500;
+    v.samples_per_ray = 50;
     v.aperture = 0.05;
     v.focal_dist = 10;
     v.shadows = true;
@@ -184,17 +184,27 @@ QImage mirror_scene(){
     vec3f l1 = vec3f(10,10,10);
     vec3f l2 = vec3f(-10,10,10);
     std::vector<float> light_intensities {0.3,0.5};
+    bool refract = true; // this sets the scene up to showcase refraction instead of reflection
 
     mesh msh = mesh();
     std::shared_ptr<surface> sph1 = std::make_shared<sphere>(vec3f(2,0.8,0), 0.8);
-    std::shared_ptr<surface> sph2 = std::make_shared<sphere>(vec3f(0,2,-5), 2);
     std::shared_ptr<surface> sph3 = std::make_shared<sphere>(vec3f(0,1,0), 1);
-    std::shared_ptr<checkerboard> floor = std::make_shared<checkerboard>(0, true);
+    if(refract){
+        sph1 = std::make_shared<sphere>(vec3f(6,4,-14), 2);
+        sph3 = std::make_shared<sphere>(vec3f(0,4,-14), 3);
+    }
+    std::shared_ptr<surface> sph2 = std::make_shared<sphere>(vec3f(0,2,-5), 2);
+    std::shared_ptr<checkerboard> floor = std::make_shared<checkerboard>(0, false);
     float h = 0.;
     std::shared_ptr<surface> tri = std::make_shared<triangle>(vec3f(-100,h,100), vec3f(100,h,100),vec3f(0,h,-100));
     tri->color = qRgb(200,200,200);
 
-    sph2->specular = true;
+    if(refract){
+        sph2->specular = false;
+        sph2->refract_eta = 5;
+    }
+    else
+        sph2->specular = true;
     sph1->color = qRgb(255,0,0);
     sph3->color = qRgb(0,0,255);
     floor->color = qRgb(105,150,150);
@@ -211,9 +221,10 @@ QImage mirror_scene(){
     light_srcs.push_back(l1);
     light_srcs.push_back(l2);
     view v = view(width,height, viewer_pos,w, msh, viewing_dst, light_srcs, light_intensities);
+    v.anti_alias = true;
+    v.samples_per_ray = 20;
     QImage img = v.render();
 
-    v.path_tracing = true; // Path tracing turned off
     return img;
 }
 
@@ -314,7 +325,8 @@ int main(int argc, char *argv[])
     //QImage img = view_mesh();
     //QImage img = focal_scene();
     //QImage img = cornell_box();
-    QImage img = mirror_scene();
+    //QImage img = mirror_scene();
+    QImage img = aligned_reflective_gallery();
     img.save("./rendered.png");
     image = QPixmap::fromImage(img);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
